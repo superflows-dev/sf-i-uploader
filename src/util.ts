@@ -90,8 +90,14 @@ async function callApi(url: string, data: string, authorization: any) {
 
 }
 
+function sleep(ms: number) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
 const exportFunctions = {
-   callApi, validateName, readCookie, listenForChange, truncate, newUuidV4
+   callApi, validateName, readCookie, listenForChange, truncate, newUuidV4, sleep
 };
 
 export default exportFunctions;

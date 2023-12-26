@@ -22,9 +22,14 @@ export declare class SfIUploader extends LitElement {
     getMax: () => number;
     maxSize: number;
     apiId: string;
+    extract: string;
     allowedExtensions: string;
+    extractedWords: string;
+    extractJobId: string;
     getAllowedExtensions: () => any;
     setAllowedExtensions: (arr: any) => void;
+    getExtractedWords: () => any;
+    setExtractedWords: (arr: any) => void;
     selectedValues: () => {
         key: any;
         ext: any;
@@ -32,7 +37,10 @@ export declare class SfIUploader extends LitElement {
     inputArr: any[];
     uploadProgress: any;
     uploadProgressReceiver: any;
+    extractState: any;
     current: number;
+    arrWords: any;
+    arrWordsMeta: any;
     flow: string;
     static styles: import("lit").CSSResult;
     _SfRowError: any;
@@ -50,14 +58,19 @@ export declare class SfIUploader extends LitElement {
     uploadProgressUpdater: (element: HTMLElement, value: string) => void;
     renderKeyData: (ext: string, data: string) => void;
     getKeyData: (key: string) => Promise<void>;
+    getExtract: (key: string) => Promise<any>;
+    getExtractStatus: (jobid: string) => Promise<any>;
     uploadMeta: (key: string, ext: string, numblocks: string) => Promise<void>;
     uploadBlock: (key: string, block: string, data: string) => Promise<void>;
     chunkify: (base64String: string) => RegExpMatchArray | null;
+    executeExtract: (jobId: string) => Promise<void>;
+    processExtract: (key: string) => Promise<any>;
     beginUploadJob: (fileIndex: any, file: any) => void;
     clearUploads: () => void;
     populateInputs: () => void;
     processChangeInput: () => void;
     processChangeUploadProgress: () => void;
+    processExtractState: () => void;
     initListeners: () => void;
     prepopulateInputs: () => void;
     loadMode: () => Promise<void>;

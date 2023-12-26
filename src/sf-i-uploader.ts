@@ -62,7 +62,16 @@ export class SfIUploader extends LitElement {
   apiId!: string;
 
   @property()
+  extract: string = "no";
+
+  @property()
   allowedExtensions: string = "[\"jpg\", \"png\"]";
+
+  @property()
+  extractedWords: string = "[]";
+
+  @property()
+  extractJobId: string = "";
 
   getAllowedExtensions = () => {
     return JSON.parse(this.allowedExtensions)
@@ -70,6 +79,14 @@ export class SfIUploader extends LitElement {
 
   setAllowedExtensions = (arr: any) => {
     this.allowedExtensions = JSON.stringify(arr);
+  }
+
+  getExtractedWords = () => {
+    return JSON.parse(this.extractedWords)
+  }
+
+  setExtractedWords = (arr: any) => {
+    this.extractedWords = JSON.stringify(arr);
   }
 
   selectedValues = () => {
@@ -98,7 +115,12 @@ export class SfIUploader extends LitElement {
   uploadProgress: any = {progress: 0};
   uploadProgressReceiver: any = null;
 
+  extractState: any = {state: 0};
+
   current: number = 0;
+
+  arrWords: any = [];
+  arrWordsMeta: any = {};
 
   @property()
   flow: string = "";
@@ -135,6 +157,10 @@ export class SfIUploader extends LitElement {
       overflow-y: auto;
       border-radius: 10px;
       z-index: 97;
+    }
+
+    .w-100 {
+      width: 100%;
     }
 
     .ext-badge {
@@ -181,6 +207,10 @@ export class SfIUploader extends LitElement {
       right: 10px;
       top: 10px;
       margin-left: 5px;
+    }
+
+    .flex-wrap {
+      flex-wrap: wrap;
     }
 
     .td-head {
@@ -495,6 +525,13 @@ export class SfIUploader extends LitElement {
       html += '</div>';
 
 
+    } else {
+
+      html += '<div class="d-flex justify-center align-center">';
+      html += '<div part="sf-uploader-download-message">File is ready for download!</div>&nbsp;&nbsp;&nbsp;&nbsp;'
+      html += '<button part="button-icon" id="download-button"><span class="material-icons">cloud_download</span></button>'
+      html += '</div>';
+
     }
 
     (this._SfDetailContainer as HTMLDivElement).innerHTML = html;
@@ -503,6 +540,18 @@ export class SfIUploader extends LitElement {
 
       (this._SfDetailContainer as HTMLDivElement).innerHTML = '';
       (this._SfDetailContainer as HTMLDivElement).style.display = 'none';
+
+    });
+
+    (this._SfDetailContainer as HTMLDivElement).querySelector('#download-button')?.addEventListener('click', () => {
+
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = data;
+      a.download = "download_"+new Date().getTime()+".pdf";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a); 
 
     });
 
@@ -521,6 +570,48 @@ export class SfIUploader extends LitElement {
       const jsonRespose = JSON.parse(xhr.responseText);
       console.log('jsonResponse sync', jsonRespose);
       this.renderKeyData(jsonRespose.ext, jsonRespose.data);
+      
+    } else {
+      const jsonRespose = JSON.parse(xhr.responseText);
+      this.setError(jsonRespose.error);
+    }
+
+  }
+
+  getExtract = async (key: string) => {
+
+    let url = "https://"+this.apiId+".execute-api.us-east-1.amazonaws.com/test/getextract";
+
+    const body = { "key": key} 
+    const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
+    const xhr : any = (await this.prepareXhr(body, url, this._SfLoader, authorization)) as any;
+    this._SfLoader.innerHTML = '';
+    if(xhr.status == 200) {
+
+      const jsonRespose = JSON.parse(xhr.responseText);
+      console.log('jsonResponse sync', jsonRespose);
+      return jsonRespose;
+
+    } else {
+      const jsonRespose = JSON.parse(xhr.responseText);
+      this.setError(jsonRespose.error);
+    }
+
+  }
+
+  getExtractStatus = async (jobid: string) => {
+
+    let url = "https://"+this.apiId+".execute-api.us-east-1.amazonaws.com/test/getextractstatus";
+
+    const body = { "jobid": jobid} 
+    const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
+    const xhr : any = (await this.prepareXhr(body, url, this._SfLoader, authorization)) as any;
+    this._SfLoader.innerHTML = '';
+    if(xhr.status == 200) {
+
+      const jsonRespose = JSON.parse(xhr.responseText);
+      console.log('jsonResponse sync', jsonRespose);
+      return jsonRespose;
       
     } else {
       const jsonRespose = JSON.parse(xhr.responseText);
@@ -578,6 +669,60 @@ export class SfIUploader extends LitElement {
 
   }
 
+  executeExtract = async (jobId: string) => {
+
+    var resultExtractStatus;
+
+    do {
+
+      //const jobId = "55ef692a8a5780896b8b2d5ab63f9a5d74c9b93b4707acb812e2e334ecad7236";
+      resultExtractStatus = await this.getExtractStatus(jobId);
+      console.log(resultExtractStatus.status.JobStatus);
+
+      await Util.sleep(5000);
+
+    } while (resultExtractStatus.status.JobStatus == "IN_PROGRESS");
+
+    if(resultExtractStatus.status.JobStatus == "SUCCEEDED") {
+
+      this.arrWords = [];
+      this.arrWordsMeta = {};
+
+      for(var i = 0; i < resultExtractStatus.status.Blocks.length; i++) {
+
+        const block: any = resultExtractStatus.status.Blocks[i];
+        console.log(block.BlockType);
+        if(this.arrWordsMeta[block.BlockType] == null) {
+          this.arrWordsMeta[block.BlockType] = 0;
+        }
+        this.arrWordsMeta[block.BlockType]++;
+
+        if(block.BlockType == "WORD") {
+          this.arrWords.push(block.Text + "");
+        }
+
+      }
+
+      this.setExtractedWords(this.arrWords)
+      console.log(this.arrWordsMeta);
+      console.log(this.arrWords);
+      this.extractState.state = 2;
+
+    }
+
+  }
+
+  processExtract = async (key: string) => {
+
+    this.extractState.state = 1;
+
+    const resultExtract = await this.getExtract(key);
+    console.log(resultExtract);
+
+    const jobId = resultExtract.jobId;
+    return jobId;
+  
+  }
 
   beginUploadJob = (fileIndex: any, file: any) => {
 
@@ -614,6 +759,19 @@ export class SfIUploader extends LitElement {
         }
         const event = new CustomEvent('uploadCompleted', {detail: keys, bubbles: true, composed: true});
         this.dispatchEvent(event);
+
+        if(this.extract.toLowerCase() == "yes") {
+
+          const jobId = await this.processExtract(key);
+          const event1 = new CustomEvent('analysisInProgress', {detail: jobId, bubbles: true, composed: true});
+          this.dispatchEvent(event1);
+
+          await this.executeExtract(jobId);
+          const event2 = new CustomEvent('analysisCompleted', {detail: {meta: this.arrWordsMeta, words: this.arrWords}, bubbles: true, composed: true});
+          this.dispatchEvent(event2);
+
+        }
+
       }
       run();
 
@@ -627,17 +785,43 @@ export class SfIUploader extends LitElement {
 
   populateInputs = () => {
 
+    console.log('populateinputs', this.extractState);
+
     var htmlStr = '';
 
     for(var i = 0; i < this.inputArr.length; i++) {
       htmlStr += '<div part="input" id="upload-row-'+i+'">';
-        htmlStr += '<div class="d-flex align-center justify-between">';
+        htmlStr += '<div class="d-flex align-center justify-between flex-wrap">';
         if(this.inputArr[i].file == null) {
-
-          console.log('hi')
 
           htmlStr += '<input id="file-'+i+'" type="file" />';
           htmlStr += '<button id="button-delete-'+i+'" part="button-icon"><span class="material-icons">delete</span></button>';
+        } else if (this.getExtractedWords().length > 0) {
+
+          const fileName = this.inputArr[i]['file'].name;
+          const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
+          htmlStr += '<div class="w-100 d-flex align-center justify-between">';
+            htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
+            htmlStr += '<div class="d-flex align-center">';
+              htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analysis Complete</div>';
+              htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
+              htmlStr += '<button id="button-open-'+i+'" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
+            htmlStr += '</div>';
+          htmlStr += '</div>';
+          htmlStr += '<div part="extracted-text" class="d-flex align-center mt-10">';
+          htmlStr += '<sf-i-elastic-text text="'+this.getExtractedWords().join(' ')+'" minLength="100"></sf-i-elastic-text>';
+          htmlStr += '</div>';
+
+        } else if (this.extractState.state === 1) {
+
+          const fileName = this.inputArr[i]['file'].name;
+          const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
+          htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
+          htmlStr += '<div class="d-flex align-center">';
+          htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analyzing...</div>';
+          htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
+          htmlStr += '</div>';
+
         } else if (this.inputArr[i]["key"] != null) {
           console.log('there')
           const fileName = this.inputArr[i]['file'].name;
@@ -648,7 +832,7 @@ export class SfIUploader extends LitElement {
           htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
           htmlStr += '<button id="button-open-'+i+'" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
           htmlStr += '</div>';
-        } else {
+        }else {
           console.log('hello')
           console.log(this.inputArr[i])
           const fileName = this.inputArr[i]['file'].name;
@@ -765,10 +949,18 @@ export class SfIUploader extends LitElement {
     }
   }
 
+  processExtractState = () => {
+
+    console.log('extract state', this.extractState);
+    this.populateInputs();
+
+  }
+
   initListeners = () => {
 
     Util.listenForChange(this.inputArr, this.processChangeInput)
     Util.listenForChange(this.uploadProgress, this.processChangeUploadProgress)
+    Util.listenForChange(this.extractState, this.processExtractState)
 
   }
 
@@ -788,6 +980,11 @@ export class SfIUploader extends LitElement {
     }
     if(arr.length === 0) {
       this.inputArr = [];
+    }
+
+    if(this.extractJobId.length > 0) {
+      this.extractState.state = 1;
+      this.executeExtract(this.extractJobId);
     }
 
   }
@@ -821,6 +1018,7 @@ export class SfIUploader extends LitElement {
     return html`
           
       <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
       <div class="SfIUploaderC">
         <div id="upload-container">
 
