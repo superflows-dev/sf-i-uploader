@@ -50,7 +50,8 @@ let SfIUploader = class SfIUploader extends LitElement {
         this.maxSize = 512000;
         this.extract = "no";
         this.allowedExtensions = "[\"jpg\", \"png\"]";
-        this.extractedWords = "[]";
+        // @property()
+        // extractedWords: string = "[]";
         this.extractJobId = "";
         this.getAllowedExtensions = () => {
             return JSON.parse(this.allowedExtensions);
@@ -58,17 +59,33 @@ let SfIUploader = class SfIUploader extends LitElement {
         this.setAllowedExtensions = (arr) => {
             this.allowedExtensions = JSON.stringify(arr);
         };
-        this.getExtractedWords = () => {
-            return JSON.parse(this.extractedWords);
-        };
-        this.setExtractedWords = (arr) => {
-            this.extractedWords = JSON.stringify(arr);
-        };
+        // getExtractedWords = () => {
+        //   return JSON.parse(this.extractedWords)
+        // }
+        // setExtractedWords = (arr: any) => {
+        //   this.extractedWords = JSON.stringify(arr);
+        // }
         this.selectedValues = () => {
             const values = [];
             for (var i = 0; i < this.inputArr.length; i++) {
                 if (this.inputArr[i]['key'] != null) {
-                    if (this.inputArr[i]['ext'] != null) {
+                    if (this.inputArr[i]['arrWords'] != null) {
+                        values.push({
+                            arrWords: this.inputArr[i]['arrWords'],
+                            arrWordsMeta: this.inputArr[i]['arrWordsMeta'],
+                            jobId: this.inputArr[i]['jobId'],
+                            key: this.inputArr[i]['key'],
+                            ext: this.inputArr[i]['ext']
+                        });
+                    }
+                    else if (this.inputArr[i]['jobId'] != null) {
+                        values.push({
+                            jobId: this.inputArr[i]['jobId'],
+                            key: this.inputArr[i]['key'],
+                            ext: this.inputArr[i]['ext']
+                        });
+                    }
+                    else if (this.inputArr[i]['ext'] != null) {
                         values.push({
                             key: this.inputArr[i]['key'],
                             ext: this.inputArr[i]['ext']
@@ -87,7 +104,7 @@ let SfIUploader = class SfIUploader extends LitElement {
         this.inputArr = [];
         this.uploadProgress = { progress: 0 };
         this.uploadProgressReceiver = null;
-        this.extractState = { state: 0 };
+        // extractState: any = {state: 0};
         this.current = 0;
         this.arrWords = [];
         this.arrWordsMeta = {};
@@ -260,18 +277,25 @@ let SfIUploader = class SfIUploader extends LitElement {
                         this.arrWords.push(block.Text + "");
                     }
                 }
-                this.setExtractedWords(this.arrWords);
-                console.log(this.arrWordsMeta);
-                console.log(this.arrWords);
-                this.extractState.state = 2;
+                // this.setExtractedWords(this.arrWords)
+                // console.log(this.arrWordsMeta);
+                // console.log(this.arrWords);
+                // this.extractState.state = 2;
             }
         };
         this.processExtract = async (key) => {
-            this.extractState.state = 1;
+            // this.extractState.state = 1;
             const resultExtract = await this.getExtract(key);
             console.log(resultExtract);
             const jobId = resultExtract.jobId;
             return jobId;
+        };
+        this.executeAndUpdateExtract = async (jobId, fileIndex) => {
+            await this.executeExtract(jobId);
+            this.inputArr[fileIndex]["arrWords"] = this.arrWords;
+            this.inputArr[fileIndex]["arrWordsMeta"] = this.arrWordsMeta;
+            const event2 = new CustomEvent('analysisCompleted', { detail: { meta: this.arrWordsMeta, words: this.arrWords }, bubbles: true, composed: true });
+            this.dispatchEvent(event2);
         };
         this.beginUploadJob = (fileIndex, file) => {
             const fileName = file.name;
@@ -294,6 +318,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                         this.inputArr[i]["progress"] = false;
                     }
                     this.inputArr[fileIndex]["key"] = key;
+                    this.inputArr[fileIndex]["ext"] = ext;
                     const keys = [];
                     for (i = 0; i < this.inputArr.length; i++) {
                         if (this.inputArr[i]['key'] != null && this.inputArr[i]['key'].length > 5) {
@@ -304,11 +329,10 @@ let SfIUploader = class SfIUploader extends LitElement {
                     this.dispatchEvent(event);
                     if (this.extract.toLowerCase() == "yes") {
                         const jobId = await this.processExtract(key);
+                        this.inputArr[fileIndex]["jobId"] = jobId;
                         const event1 = new CustomEvent('analysisInProgress', { detail: jobId, bubbles: true, composed: true });
                         this.dispatchEvent(event1);
-                        await this.executeExtract(jobId);
-                        const event2 = new CustomEvent('analysisCompleted', { detail: { meta: this.arrWordsMeta, words: this.arrWords }, bubbles: true, composed: true });
-                        this.dispatchEvent(event2);
+                        this.executeAndUpdateExtract(jobId, fileIndex);
                     }
                 };
                 run();
@@ -319,7 +343,7 @@ let SfIUploader = class SfIUploader extends LitElement {
         };
         this.populateInputs = () => {
             var _a, _b, _c, _d, _e, _f;
-            console.log('populateinputs', this.extractState);
+            console.log('populateinputs', this.inputArr);
             var htmlStr = '';
             for (var i = 0; i < this.inputArr.length; i++) {
                 htmlStr += '<div part="input" id="upload-row-' + i + '">';
@@ -328,7 +352,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                     htmlStr += '<input id="file-' + i + '" type="file" />';
                     htmlStr += '<button id="button-delete-' + i + '" part="button-icon"><span class="material-icons">delete</span></button>';
                 }
-                else if (this.getExtractedWords().length > 0) {
+                else if (this.inputArr[i]["arrWords"] != null) {
                     const fileName = this.inputArr[i]['file'].name;
                     const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
                     htmlStr += '<div class="w-100 d-flex align-center justify-between">';
@@ -339,11 +363,16 @@ let SfIUploader = class SfIUploader extends LitElement {
                     htmlStr += '<button id="button-open-' + i + '" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
                     htmlStr += '</div>';
                     htmlStr += '</div>';
+                    htmlStr += '<div part="extracted-meta" class="d-flex align-center mt-10 w-100">';
+                    htmlStr += '<div part="extracted-text-chip">' + this.inputArr[i]["arrWordsMeta"]['PAGE'] + ' Pages</div>';
+                    htmlStr += '<div part="extracted-text-chip">' + this.inputArr[i]["arrWordsMeta"]['LINE'] + ' Lines</div>';
+                    htmlStr += '<div part="extracted-text-chip">' + this.inputArr[i]["arrWordsMeta"]['WORD'] + ' Words</div>';
+                    htmlStr += '</div>';
                     htmlStr += '<div part="extracted-text" class="d-flex align-center mt-10">';
-                    htmlStr += '<sf-i-elastic-text text="' + this.getExtractedWords().join(' ') + '" minLength="100"></sf-i-elastic-text>';
+                    htmlStr += '<sf-i-elastic-text text="' + this.inputArr[i]["arrWords"].join(' ') + '" minLength="100"></sf-i-elastic-text>';
                     htmlStr += '</div>';
                 }
-                else if (this.extractState.state === 1) {
+                else if (this.inputArr[i]["jobId"] != null) {
                     const fileName = this.inputArr[i]['file'].name;
                     const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
                     htmlStr += '<div class="mr-10"><sf-i-elastic-text text="' + fileName + '" minLength="20"></sf-i-elastic-text></div>';
@@ -459,14 +488,14 @@ let SfIUploader = class SfIUploader extends LitElement {
                 this.uploadProgressUpdater(this.uploadProgressReceiver, this.uploadProgress.progress);
             }
         };
-        this.processExtractState = () => {
-            console.log('extract state', this.extractState);
-            this.populateInputs();
-        };
+        // processExtractState = () => {
+        //   console.log('extract state', this.extractState);
+        //   this.populateInputs();
+        // }
         this.initListeners = () => {
             Util.listenForChange(this.inputArr, this.processChangeInput);
             Util.listenForChange(this.uploadProgress, this.processChangeUploadProgress);
-            Util.listenForChange(this.extractState, this.processExtractState);
+            // Util.listenForChange(this.extractState, this.processExtractState)
         };
         this.prepopulateInputs = () => {
             console.log('prepop', this.prepopulatedInputArr);
@@ -479,14 +508,23 @@ let SfIUploader = class SfIUploader extends LitElement {
                 obj['file'] = {};
                 obj['file']['name'] = arr[i]['key'] + '.' + arr[i]['ext'];
                 obj['file']['ext'] = arr[i]['ext'];
+                if (arr[i]['jobId'] != null) {
+                    obj['jobId'] = arr[i]['jobId'];
+                }
+                if (arr[i]['arrWords'] != null) {
+                    obj['arrWords'] = arr[i]['arrWords'];
+                    obj['arrWordsMeta'] = arr[i]['arrWordsMeta'];
+                }
                 this.inputArr.push(obj);
             }
             if (arr.length === 0) {
                 this.inputArr = [];
             }
-            if (this.extractJobId.length > 0) {
-                this.extractState.state = 1;
-                this.executeExtract(this.extractJobId);
+            console.log('prepop', 'executeAndUpdateExtract', this.inputArr);
+            for (var i = 0; i < arr.length; i++) {
+                if (arr[i]['jobId'] != null && arr[i]['arrWords'] == null) {
+                    this.executeAndUpdateExtract(arr[i]['jobId'], i);
+                }
             }
         };
         this.loadMode = async () => {
@@ -873,9 +911,6 @@ __decorate([
 __decorate([
     property()
 ], SfIUploader.prototype, "allowedExtensions", void 0);
-__decorate([
-    property()
-], SfIUploader.prototype, "extractedWords", void 0);
 __decorate([
     property()
 ], SfIUploader.prototype, "extractJobId", void 0);

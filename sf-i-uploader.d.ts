@@ -24,20 +24,31 @@ export declare class SfIUploader extends LitElement {
     apiId: string;
     extract: string;
     allowedExtensions: string;
-    extractedWords: string;
     extractJobId: string;
     getAllowedExtensions: () => any;
     setAllowedExtensions: (arr: any) => void;
-    getExtractedWords: () => any;
-    setExtractedWords: (arr: any) => void;
-    selectedValues: () => {
+    selectedValues: () => ({
+        arrWords: any;
+        arrWordsMeta: any;
+        jobId: any;
         key: any;
         ext: any;
-    }[];
+    } | {
+        jobId: any;
+        key: any;
+        ext: any;
+        arrWords?: undefined;
+        arrWordsMeta?: undefined;
+    } | {
+        key: any;
+        ext: any;
+        arrWords?: undefined;
+        arrWordsMeta?: undefined;
+        jobId?: undefined;
+    })[];
     inputArr: any[];
     uploadProgress: any;
     uploadProgressReceiver: any;
-    extractState: any;
     current: number;
     arrWords: any;
     arrWordsMeta: any;
@@ -65,12 +76,12 @@ export declare class SfIUploader extends LitElement {
     chunkify: (base64String: string) => RegExpMatchArray | null;
     executeExtract: (jobId: string) => Promise<void>;
     processExtract: (key: string) => Promise<any>;
+    executeAndUpdateExtract: (jobId: string, fileIndex: number) => Promise<void>;
     beginUploadJob: (fileIndex: any, file: any) => void;
     clearUploads: () => void;
     populateInputs: () => void;
     processChangeInput: () => void;
     processChangeUploadProgress: () => void;
-    processExtractState: () => void;
     initListeners: () => void;
     prepopulateInputs: () => void;
     loadMode: () => Promise<void>;

@@ -304,8 +304,12 @@
   </head>
   <body>
 
-    <sf-i-uploader max="10" apiId="1peg5170d3" allowedExtensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;]" prepopulatedInputArr="[]" extract="yes"></sf-i-uploader>
+    <sf-i-uploader max="10" apiId="1peg5170d3" allowedExtensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;]" prepopulatedInputArr="[]" extract="yes" extractJobId="85dd414878cd515a10cd4656cb290bce4c05ef89e08475dc9c5e4fdc320e93bd"></sf-i-uploader>
     
+    <br /><br />
+
+    <button onclick="save()">Save</button>
+
     <!-- <sf-i-uploader 
       name="Compliances"
       apiId="qwnfxbyrr1"
@@ -469,7 +473,10 @@
 
     </sf-i-uploader> -->
     <script>
-      
+      function save() {
+        const selectedValues = document.querySelector('sf-i-uploader').selectedValues();
+        console.log(selectedValues);
+      }
     </script>
   </body>
 </html>
