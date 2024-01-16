@@ -15,6 +15,7 @@ import { LitElement, html, css } from 'lit';
 // import {SfISubSelect} from 'sf-i-sub-select';
 import { customElement, query, property } from 'lit/decorators.js';
 import Util from './util';
+import Api from './api';
 // import {LitElement, html, css} from 'lit';
 // import {customElement} from 'lit/decorators.js';
 /*
@@ -39,6 +40,9 @@ let SfIUploader = class SfIUploader extends LitElement {
         super();
         this.prepopulatedInputArr = "[]";
         this.readOnly = false;
+        this.dataPassthrough = "";
+        this.callbackUrlHost = "";
+        this.callbackUrlPath = "";
         this.getMax = () => {
             try {
                 return parseInt(this.max);
@@ -50,20 +54,12 @@ let SfIUploader = class SfIUploader extends LitElement {
         this.maxSize = 512000;
         this.extract = "no";
         this.allowedExtensions = "[\"jpg\", \"png\"]";
-        // @property()
-        // extractedWords: string = "[]";
         this.extractJobId = "";
         this.getAllowedExtensions = () => {
             return JSON.parse(this.allowedExtensions);
         };
-        this.setAllowedExtensions = (arr) => {
-            this.allowedExtensions = JSON.stringify(arr);
-        };
-        // getExtractedWords = () => {
-        //   return JSON.parse(this.extractedWords)
-        // }
-        // setExtractedWords = (arr: any) => {
-        //   this.extractedWords = JSON.stringify(arr);
+        // setAllowedExtensions = (arr: any) => {
+        //   this.allowedExtensions = JSON.stringify(arr);
         // }
         this.selectedValues = () => {
             const values = [];
@@ -104,17 +100,16 @@ let SfIUploader = class SfIUploader extends LitElement {
         this.inputArr = [];
         this.uploadProgress = { progress: 0 };
         this.uploadProgressReceiver = null;
-        // extractState: any = {state: 0};
         this.current = 0;
         this.arrWords = [];
         this.arrWordsMeta = {};
         this.flow = "";
-        this.prepareXhr = async (data, url, loaderElement, authorization) => {
-            if (loaderElement != null) {
-                loaderElement.innerHTML = '<div class="lds-dual-ring"></div>';
-            }
-            return await Util.callApi(url, data, authorization);
-        };
+        // prepareXhr = async (data: any, url: string, loaderElement: any, authorization: any) => {
+        //   if(loaderElement != null) {
+        //     loaderElement.innerHTML = '<div class="lds-dual-ring"></div>';
+        //   }
+        //   return await Util.callApi(url, data, authorization);
+        // }
         this.clearMessages = () => {
             this._SfRowError.style.display = 'none';
             this._SfRowErrorMessage.innerHTML = '';
@@ -158,6 +153,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                 html += '</div>';
             }
             this._SfDetailContainer.innerHTML = html;
+            console.log('rendering key data', html);
             (_a = this._SfDetailContainer.querySelector('#button-detail-cancel')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', () => {
                 this._SfDetailContainer.innerHTML = '';
                 this._SfDetailContainer.style.display = 'none';
@@ -172,85 +168,6 @@ let SfIUploader = class SfIUploader extends LitElement {
                 document.body.removeChild(a);
             });
         };
-        this.getKeyData = async (key) => {
-            let url = "https://" + this.apiId + ".execute-api.us-east-1.amazonaws.com/test/get";
-            const body = { "key": key };
-            const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
-            const xhr = (await this.prepareXhr(body, url, this._SfLoader, authorization));
-            this._SfLoader.innerHTML = '';
-            if (xhr.status == 200) {
-                const jsonRespose = JSON.parse(xhr.responseText);
-                console.log('jsonResponse sync', jsonRespose);
-                this.renderKeyData(jsonRespose.ext, jsonRespose.data);
-            }
-            else {
-                const jsonRespose = JSON.parse(xhr.responseText);
-                this.setError(jsonRespose.error);
-            }
-        };
-        this.getExtract = async (key) => {
-            let url = "https://" + this.apiId + ".execute-api.us-east-1.amazonaws.com/test/getextract";
-            const body = { "key": key };
-            const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
-            const xhr = (await this.prepareXhr(body, url, this._SfLoader, authorization));
-            this._SfLoader.innerHTML = '';
-            if (xhr.status == 200) {
-                const jsonRespose = JSON.parse(xhr.responseText);
-                console.log('jsonResponse sync', jsonRespose);
-                return jsonRespose;
-            }
-            else {
-                const jsonRespose = JSON.parse(xhr.responseText);
-                this.setError(jsonRespose.error);
-            }
-        };
-        this.getExtractStatus = async (jobid) => {
-            let url = "https://" + this.apiId + ".execute-api.us-east-1.amazonaws.com/test/getextractstatus";
-            const body = { "jobid": jobid };
-            const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
-            const xhr = (await this.prepareXhr(body, url, this._SfLoader, authorization));
-            this._SfLoader.innerHTML = '';
-            if (xhr.status == 200) {
-                const jsonRespose = JSON.parse(xhr.responseText);
-                console.log('jsonResponse sync', jsonRespose);
-                return jsonRespose;
-            }
-            else {
-                const jsonRespose = JSON.parse(xhr.responseText);
-                this.setError(jsonRespose.error);
-            }
-        };
-        this.uploadMeta = async (key, ext, numblocks) => {
-            let url = "https://" + this.apiId + ".execute-api.us-east-1.amazonaws.com/test/upload";
-            const body = { "type": "meta", "key": key, "ext": ext, "numblocks": numblocks };
-            const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
-            const xhr = (await this.prepareXhr(body, url, this._SfLoader, authorization));
-            this._SfLoader.innerHTML = '';
-            if (xhr.status == 200) {
-                const jsonRespose = JSON.parse(xhr.responseText);
-                console.log('jsonResponse sync', jsonRespose);
-            }
-            else {
-                const jsonRespose = JSON.parse(xhr.responseText);
-                this.setError(jsonRespose.error);
-            }
-        };
-        this.uploadBlock = async (key, block, data) => {
-            //console.log('uploading..', data);
-            let url = "https://" + this.apiId + ".execute-api.us-east-1.amazonaws.com/test/upload";
-            const body = { "type": "data", "key": key, "data": data, "block": block };
-            const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
-            const xhr = (await this.prepareXhr(body, url, this._SfLoader, authorization));
-            this._SfLoader.innerHTML = '';
-            if (xhr.status == 200) {
-                // const jsonRespose = JSON.parse(xhr.responseText);
-                //console.log('jsonResponse sync', jsonRespose, block);
-            }
-            else {
-                const jsonRespose = JSON.parse(xhr.responseText);
-                this.setError(jsonRespose.error);
-            }
-        };
         this.chunkify = (base64String) => {
             const chunks = base64String.match(/.{1,8192}/g);
             return chunks;
@@ -258,35 +175,19 @@ let SfIUploader = class SfIUploader extends LitElement {
         this.executeExtract = async (jobId) => {
             var resultExtractStatus;
             do {
-                //const jobId = "55ef692a8a5780896b8b2d5ab63f9a5d74c9b93b4707acb812e2e334ecad7236";
-                resultExtractStatus = await this.getExtractStatus(jobId);
-                console.log(resultExtractStatus.status.JobStatus);
+                resultExtractStatus = await Api.getExtractStatus(jobId, this.apiId, this._SfLoader, this.setError);
                 await Util.sleep(5000);
-            } while (resultExtractStatus.status.JobStatus == "IN_PROGRESS");
-            if (resultExtractStatus.status.JobStatus == "SUCCEEDED") {
+            } while (resultExtractStatus.status == "IN_PROGRESS");
+            if (resultExtractStatus.status == "SUCCEEDED") {
                 this.arrWords = [];
                 this.arrWordsMeta = {};
-                for (var i = 0; i < resultExtractStatus.status.Blocks.length; i++) {
-                    const block = resultExtractStatus.status.Blocks[i];
-                    console.log(block.BlockType);
-                    if (this.arrWordsMeta[block.BlockType] == null) {
-                        this.arrWordsMeta[block.BlockType] = 0;
-                    }
-                    this.arrWordsMeta[block.BlockType]++;
-                    if (block.BlockType == "WORD") {
-                        this.arrWords.push(block.Text + "");
-                    }
-                }
-                // this.setExtractedWords(this.arrWords)
-                // console.log(this.arrWordsMeta);
-                // console.log(this.arrWords);
-                // this.extractState.state = 2;
+                this.arrWords = JSON.parse(resultExtractStatus.arrWords.S);
+                this.arrWordsMeta = JSON.parse(resultExtractStatus.arrWordsMeta.S);
             }
         };
-        this.processExtract = async (key) => {
+        this.processExtract = async (key, fileIndex) => {
             // this.extractState.state = 1;
-            const resultExtract = await this.getExtract(key);
-            console.log(resultExtract);
+            const resultExtract = await Api.getExtract(key, fileIndex, this.dataPassthrough, this.apiId, this._SfLoader, this.setError, this.callbackUrlHost, this.callbackUrlPath);
             const jobId = resultExtract.jobId;
             return jobId;
         };
@@ -299,19 +200,17 @@ let SfIUploader = class SfIUploader extends LitElement {
         };
         this.beginUploadJob = (fileIndex, file) => {
             const fileName = file.name;
-            const ext = file.name.split(".")[file.name.split(".").length - 1];
+            const ext = fileName.split(".")[file.name.split(".").length - 1];
             const key = Util.newUuidV4();
-            console.log(fileName, ext, key);
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onloadend = () => {
                 const run = async () => {
-                    console.log('filed received', reader.result);
                     const chunks = this.chunkify(reader.result);
-                    await this.uploadMeta(key, ext, (chunks === null || chunks === void 0 ? void 0 : chunks.length) + "");
+                    await Api.uploadMeta(key, ext, (chunks === null || chunks === void 0 ? void 0 : chunks.length) + "", this.apiId, this._SfLoader, this.setError);
                     for (var i = 0; i < chunks.length; i++) {
                         this.uploadProgressReceiver = this._SfUploadContainer.querySelector('#upload-row-' + fileIndex);
-                        await this.uploadBlock(key, i + "", chunks[i] + "");
+                        await Api.uploadBlock(key, i + "", chunks[i] + "", this.apiId, this._SfLoader, this.setError);
                         this.uploadProgress.progress = parseInt((((i + 1) * 100) / chunks.length) + "");
                     }
                     for (var i = 0; i < this.inputArr.length; i++) {
@@ -328,7 +227,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                     const event = new CustomEvent('uploadCompleted', { detail: keys, bubbles: true, composed: true });
                     this.dispatchEvent(event);
                     if (this.extract.toLowerCase() == "yes") {
-                        const jobId = await this.processExtract(key);
+                        const jobId = await this.processExtract(key, fileIndex);
                         this.inputArr[fileIndex]["jobId"] = jobId;
                         const event1 = new CustomEvent('analysisInProgress', { detail: jobId, bubbles: true, composed: true });
                         this.dispatchEvent(event1);
@@ -343,7 +242,6 @@ let SfIUploader = class SfIUploader extends LitElement {
         };
         this.populateInputs = () => {
             var _a, _b, _c, _d, _e, _f;
-            console.log('populateinputs', this.inputArr);
             var htmlStr = '';
             for (var i = 0; i < this.inputArr.length; i++) {
                 htmlStr += '<div part="input" id="upload-row-' + i + '">';
@@ -382,19 +280,17 @@ let SfIUploader = class SfIUploader extends LitElement {
                     htmlStr += '</div>';
                 }
                 else if (this.inputArr[i]["key"] != null) {
-                    console.log('there');
                     const fileName = this.inputArr[i]['file'].name;
                     const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
                     htmlStr += '<div class="mr-10"><sf-i-elastic-text text="' + fileName + '" minLength="20"></sf-i-elastic-text></div>';
                     htmlStr += '<div class="d-flex align-center">';
+                    htmlStr += '<div class="progress-number mr-10 upload-status" part="upload-status"></div>';
                     htmlStr += '<div class="mr-10 upload-status" part="upload-status">Upload Complete</div>';
                     htmlStr += '<div part="ext-badge" class="ext-badge mr-10">' + ext + '</div>';
                     htmlStr += '<button id="button-open-' + i + '" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
                     htmlStr += '</div>';
                 }
                 else {
-                    console.log('hello');
-                    console.log(this.inputArr[i]);
                     const fileName = this.inputArr[i]['file'].name;
                     const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
                     htmlStr += '<div class="mr-10"><sf-i-elastic-text text="' + fileName + '" minLength="20"></sf-i-elastic-text></div>';
@@ -421,17 +317,14 @@ let SfIUploader = class SfIUploader extends LitElement {
             }
             this._SfUploadContainer.innerHTML = htmlStr;
             (_a = this._SfUploadContainer.querySelector('#button-add')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', () => {
-                console.log('current', this.current);
                 if (this.current < this.getMax()) {
                     this.current++;
                     this.inputArr.push({});
-                    console.log('pushed', this.inputArr);
                 }
             });
             for (i = 0; i < this.inputArr.length; i++) {
                 (_b = this._SfUploadContainer.querySelector('#button-delete-' + i)) === null || _b === void 0 ? void 0 : _b.addEventListener('click', (ev) => {
                     const index = ev.currentTarget.id.split("-")[2];
-                    console.log('delete clicked ', index);
                     this.inputArr.splice(index, 1);
                 });
                 (_c = this._SfUploadContainer.querySelector('#file-' + i)) === null || _c === void 0 ? void 0 : _c.addEventListener('change', (ev) => {
@@ -455,16 +348,13 @@ let SfIUploader = class SfIUploader extends LitElement {
                         }, 3000);
                         return;
                     }
-                    //console.log('input array', this.in);
                 });
                 (_d = this._SfUploadContainer.querySelector('#button-cancel-' + i)) === null || _d === void 0 ? void 0 : _d.addEventListener('click', (ev) => {
                     const index = ev.currentTarget.id.split("-")[2];
-                    console.log('cancel clicked ', ev.currentTarget, index);
                     this.inputArr[index] = "";
                 });
                 (_e = this._SfUploadContainer.querySelector('#button-upload-' + i)) === null || _e === void 0 ? void 0 : _e.addEventListener('click', (ev) => {
                     const index = ev.currentTarget.id.split("-")[2];
-                    console.log('upload clicked ', ev.currentTarget, index);
                     for (var i = 0; i < this.inputArr.length; i++) {
                         this.inputArr[i]["progress"] = true;
                     }
@@ -472,35 +362,24 @@ let SfIUploader = class SfIUploader extends LitElement {
                 });
                 (_f = this._SfUploadContainer.querySelector('#button-open-' + i)) === null || _f === void 0 ? void 0 : _f.addEventListener('click', (ev) => {
                     const index = ev.currentTarget.id.split("-")[2];
-                    console.log('open clicked ', ev.currentTarget, index, this.inputArr[index]['key']);
-                    this.getKeyData(this.inputArr[index]['key']);
+                    Api.getKeyData(this.inputArr[index]['key'], this.apiId, this._SfLoader, this.renderKeyData, this.setError);
                 });
             }
-            console.log(this.inputArr);
         };
         this.processChangeInput = () => {
-            console.log('process change inputs');
             this.populateInputs();
         };
         this.processChangeUploadProgress = () => {
-            console.log('upload progress', this.uploadProgress);
             if (this.uploadProgressReceiver != null) {
                 this.uploadProgressUpdater(this.uploadProgressReceiver, this.uploadProgress.progress);
             }
         };
-        // processExtractState = () => {
-        //   console.log('extract state', this.extractState);
-        //   this.populateInputs();
-        // }
         this.initListeners = () => {
             Util.listenForChange(this.inputArr, this.processChangeInput);
             Util.listenForChange(this.uploadProgress, this.processChangeUploadProgress);
-            // Util.listenForChange(this.extractState, this.processExtractState)
         };
         this.prepopulateInputs = () => {
-            console.log('prepop', this.prepopulatedInputArr);
             const arr = JSON.parse(this.prepopulatedInputArr);
-            console.log('prepop', arr);
             this.inputArr = [];
             for (var i = 0; i < arr.length; i++) {
                 const obj = {};
@@ -508,6 +387,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                 obj['file'] = {};
                 obj['file']['name'] = arr[i]['key'] + '.' + arr[i]['ext'];
                 obj['file']['ext'] = arr[i]['ext'];
+                obj['ext'] = arr[i]['ext'];
                 if (arr[i]['jobId'] != null) {
                     obj['jobId'] = arr[i]['jobId'];
                 }
@@ -520,7 +400,6 @@ let SfIUploader = class SfIUploader extends LitElement {
             if (arr.length === 0) {
                 this.inputArr = [];
             }
-            console.log('prepop', 'executeAndUpdateExtract', this.inputArr);
             for (var i = 0; i < arr.length; i++) {
                 if (arr[i]['jobId'] != null && arr[i]['arrWords'] == null) {
                     this.executeAndUpdateExtract(arr[i]['jobId'], i);
@@ -899,6 +778,15 @@ __decorate([
 __decorate([
     property()
 ], SfIUploader.prototype, "max", void 0);
+__decorate([
+    property()
+], SfIUploader.prototype, "dataPassthrough", void 0);
+__decorate([
+    property()
+], SfIUploader.prototype, "callbackUrlHost", void 0);
+__decorate([
+    property()
+], SfIUploader.prototype, "callbackUrlPath", void 0);
 __decorate([
     property()
 ], SfIUploader.prototype, "maxSize", void 0);
