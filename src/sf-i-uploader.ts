@@ -699,7 +699,11 @@ export class SfIUploader extends LitElement {
         if(this.inputArr[i].file == null) {
 
           htmlStr += '<input id="file-'+i+'" type="file" />';
+          htmlStr += '<div class="d-flex align-center justify-between flex-wrap">';
+          htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>')
           htmlStr += '<button id="button-delete-'+i+'" part="button-icon"><span class="material-icons">delete</span></button>';
+          htmlStr += '</div>';
+
         } else if (this.inputArr[i]["arrWords"] != null) {
 
           const fileName = this.inputArr[i]['file'].name;
@@ -709,6 +713,7 @@ export class SfIUploader extends LitElement {
             htmlStr += '<div class="d-flex align-center">';
               htmlStr += '<button id="button-delete-'+i+'" class="mr-10" part="button-icon"><span class="material-icons">delete</span></button>';
               htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analysis Complete</div>';
+              htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
               htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
               htmlStr += '<button id="button-open-'+i+'" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
             htmlStr += '</div>';
@@ -730,6 +735,7 @@ export class SfIUploader extends LitElement {
           htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
           htmlStr += '<div class="d-flex align-center">';
           htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analyzing...</div>';
+          htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
           htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
           htmlStr += '</div>';
 
@@ -741,6 +747,7 @@ export class SfIUploader extends LitElement {
           htmlStr += '<div class="progress-number mr-10 upload-status" part="upload-status"></div>';
           htmlStr += '<div class="mr-10 upload-status" part="upload-status">Upload Complete</div>';
           htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
+          htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
           htmlStr += '<button id="button-open-'+i+'" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
           htmlStr += '</div>';
         }else {
@@ -749,6 +756,7 @@ export class SfIUploader extends LitElement {
           htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
           htmlStr += '<div class="d-flex align-center">';
           htmlStr += '<div class="progress-number mr-10 upload-status" part="upload-status"></div>';
+          htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
           htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
           if(this.inputArr[i]["progress"] == null || !this.inputArr[i]["progress"]) {
             htmlStr += '<button id="button-cancel-'+i+'" part="button-icon" class="mr-10"><span class="material-icons">close</span></button>';
