@@ -716,7 +716,7 @@ export class SfIUploader extends LitElement {
           htmlStr += '<div class="w-100 d-flex align-center justify-between">';
             htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
             htmlStr += '<div class="d-flex align-center">';
-              htmlStr += '<button id="button-delete-'+i+'" class="mr-10" part="button-icon"><span class="material-icons">delete</span></button>';
+              htmlStr += '<button id="button-delete-'+i+'" class="mr-10" part=""><span class="material-icons">delete</span></button>';
               htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analysis Complete</div>';
               htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
               htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
