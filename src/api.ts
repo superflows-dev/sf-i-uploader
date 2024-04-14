@@ -65,7 +65,7 @@ const getExtractStatus = async (jobid: string, apiId: string, _SfLoader: any, ca
 
 }
 
-const getExtract = async (key: string, fileIndex: string, dataPassthrough: any, apiId: string, _SfLoader: any, callbackError: any, callbackUrlHost: string, callbackUrlPath: string) => {
+const getExtract = async (key: string, fileIndex: string, dataPassthrough: any, apiId: string, _SfLoader: any, callbackError: any, callbackUrlHost: string, callbackUrlPath: string, docType: string) => {
 
     let url = "https://"+apiId+".execute-api.us-east-1.amazonaws.com/test/getextract";
 
@@ -75,7 +75,7 @@ const getExtract = async (key: string, fileIndex: string, dataPassthrough: any, 
     data.key = key;
     data.data = dataPassthrough;
 
-    const body = { "key": key, "datapassthrough": JSON.stringify(data), "callbackurlhost": callbackUrlHost, "callbackurlpath": callbackUrlPath};
+    const body = { "key": key, "datapassthrough": JSON.stringify(data), "callbackurlhost": callbackUrlHost, "callbackurlpath": callbackUrlPath, "doctype": docType};
     const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
     const xhr : any = (await prepareXhr(body, url, _SfLoader, authorization)) as any;
     _SfLoader.innerHTML = '';

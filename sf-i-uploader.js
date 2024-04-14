@@ -40,9 +40,10 @@ let SfIUploader = class SfIUploader extends LitElement {
         super();
         this.prepopulatedInputArr = "[]";
         this.readOnly = false;
-        this.dataPassthrough = "";
-        this.callbackUrlHost = "";
-        this.callbackUrlPath = "";
+        this.max = "1";
+        this.dataPassthrough = "{}";
+        this.callbackUrlHost = "eoma59bzxizzjlf.m.pipedream.net";
+        this.callbackUrlPath = "processresult";
         this.getMax = () => {
             try {
                 return parseInt(this.max);
@@ -52,9 +53,12 @@ let SfIUploader = class SfIUploader extends LitElement {
             }
         };
         this.maxSize = 512000;
-        this.extract = "no";
-        this.allowedExtensions = "[\"jpg\", \"png\"]";
+        this.apiId = "1peg5170d3";
+        this.extract = "yes";
+        this.newButtonText = "New Upload";
+        this.allowedExtensions = "[\"jpg\", \"png\", \"pdf\"]";
         this.extractJobId = "";
+        this.docType = "aadhar";
         this.getAllowedExtensions = () => {
             return JSON.parse(this.allowedExtensions);
         };
@@ -103,6 +107,7 @@ let SfIUploader = class SfIUploader extends LitElement {
         this.current = 0;
         this.arrWords = [];
         this.arrWordsMeta = {};
+        this.documentParsed = "";
         this.flow = "";
         // prepareXhr = async (data: any, url: string, loaderElement: any, authorization: any) => {
         //   if(loaderElement != null) {
@@ -153,7 +158,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                 html += '</div>';
             }
             this._SfDetailContainer.innerHTML = html;
-            console.log('rendering key data', html);
+            // console.log('rendering key data', html);
             (_a = this._SfDetailContainer.querySelector('#button-detail-cancel')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', () => {
                 this._SfDetailContainer.innerHTML = '';
                 this._SfDetailContainer.style.display = 'none';
@@ -177,17 +182,19 @@ let SfIUploader = class SfIUploader extends LitElement {
             do {
                 resultExtractStatus = await Api.getExtractStatus(jobId, this.apiId, this._SfLoader, this.setError);
                 await Util.sleep(5000);
-            } while (resultExtractStatus.status == "IN_PROGRESS");
-            if (resultExtractStatus.status == "SUCCEEDED") {
+            } while (resultExtractStatus != null && resultExtractStatus.status == "IN_PROGRESS");
+            if (resultExtractStatus != null && resultExtractStatus.status == "SUCCEEDED") {
                 this.arrWords = [];
                 this.arrWordsMeta = {};
+                this.documentParsed = "";
                 this.arrWords = JSON.parse(resultExtractStatus.arrWords.S);
                 this.arrWordsMeta = JSON.parse(resultExtractStatus.arrWordsMeta.S);
+                this.documentParsed = this.docType == "" ? "" : resultExtractStatus.documentParsed ? "yes" : "no";
             }
         };
         this.processExtract = async (key, fileIndex) => {
             // this.extractState.state = 1;
-            const resultExtract = await Api.getExtract(key, fileIndex, this.dataPassthrough, this.apiId, this._SfLoader, this.setError, this.callbackUrlHost, this.callbackUrlPath);
+            const resultExtract = await Api.getExtract(key, fileIndex, this.dataPassthrough, this.apiId, this._SfLoader, this.setError, this.callbackUrlHost, this.callbackUrlPath, this.docType);
             const jobId = resultExtract.jobId;
             return jobId;
         };
@@ -195,6 +202,7 @@ let SfIUploader = class SfIUploader extends LitElement {
             await this.executeExtract(jobId);
             this.inputArr[fileIndex]["arrWords"] = this.arrWords;
             this.inputArr[fileIndex]["arrWordsMeta"] = this.arrWordsMeta;
+            this.inputArr[fileIndex]["documentParsed"] = this.documentParsed;
             const event2 = new CustomEvent('analysisCompleted', { detail: { meta: this.arrWordsMeta, words: this.arrWords }, bubbles: true, composed: true });
             this.dispatchEvent(event2);
         };
@@ -256,6 +264,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                     htmlStr += '<div class="w-100 d-flex align-center justify-between">';
                     htmlStr += '<div class="mr-10"><sf-i-elastic-text text="' + fileName + '" minLength="20"></sf-i-elastic-text></div>';
                     htmlStr += '<div class="d-flex align-center">';
+                    htmlStr += '<button id="button-delete-' + i + '" class="mr-10" part="button-icon"><span class="material-icons">delete</span></button>';
                     htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analysis Complete</div>';
                     htmlStr += '<div part="ext-badge" class="ext-badge mr-10">' + ext + '</div>';
                     htmlStr += '<button id="button-open-' + i + '" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
@@ -265,6 +274,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                     htmlStr += '<div part="extracted-text-chip">' + this.inputArr[i]["arrWordsMeta"]['PAGE'] + ' Pages</div>';
                     htmlStr += '<div part="extracted-text-chip">' + this.inputArr[i]["arrWordsMeta"]['LINE'] + ' Lines</div>';
                     htmlStr += '<div part="extracted-text-chip">' + this.inputArr[i]["arrWordsMeta"]['WORD'] + ' Words</div>';
+                    htmlStr += this.documentParsed.length > 0 ? (this.documentParsed == "yes" ? ('<div part="extracted-text-chip-parsed" class="d-flex align-center"><span>Document Check Successful</span>&nbsp;&nbsp;<span class="material-symbols-outlined">verified</span></div>') : ('<div part="extracted-text-chip-parsed" class="d-flex align-center"><span>Document Check Failed</span>&nbsp;&nbsp;<span class="material-symbols-outlined">release_alert</span></div>')) : "";
                     htmlStr += '</div>';
                     htmlStr += '<div part="extracted-text" class="d-flex align-center mt-10">';
                     htmlStr += '<sf-i-elastic-text text="' + this.inputArr[i]["arrWords"].join(' ') + '" minLength="100"></sf-i-elastic-text>';
@@ -312,8 +322,8 @@ let SfIUploader = class SfIUploader extends LitElement {
                 }
                 htmlStr += '</div>';
             }
-            if (!this.readOnly) {
-                htmlStr += '<button id="button-add" part="button" class="mt-10">New Upload</button>';
+            if (!this.readOnly && this.inputArr.length < parseInt(this.max)) {
+                htmlStr += '<button id="button-add" part="button" class="mt-10">' + this.newButtonText + '</button>';
             }
             this._SfUploadContainer.innerHTML = htmlStr;
             (_a = this._SfUploadContainer.querySelector('#button-add')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', () => {
@@ -798,10 +808,16 @@ __decorate([
 ], SfIUploader.prototype, "extract", void 0);
 __decorate([
     property()
+], SfIUploader.prototype, "newButtonText", void 0);
+__decorate([
+    property()
 ], SfIUploader.prototype, "allowedExtensions", void 0);
 __decorate([
     property()
 ], SfIUploader.prototype, "extractJobId", void 0);
+__decorate([
+    property()
+], SfIUploader.prototype, "docType", void 0);
 __decorate([
     property()
 ], SfIUploader.prototype, "flow", void 0);

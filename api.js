@@ -46,13 +46,13 @@ const getExtractStatus = async (jobid, apiId, _SfLoader, callbackError) => {
         callbackError(jsonRespose.error);
     }
 };
-const getExtract = async (key, fileIndex, dataPassthrough, apiId, _SfLoader, callbackError, callbackUrlHost, callbackUrlPath) => {
+const getExtract = async (key, fileIndex, dataPassthrough, apiId, _SfLoader, callbackError, callbackUrlHost, callbackUrlPath, docType) => {
     let url = "https://" + apiId + ".execute-api.us-east-1.amazonaws.com/test/getextract";
     var data = {};
     data.fileIndex = fileIndex;
     data.key = key;
     data.data = dataPassthrough;
-    const body = { "key": key, "datapassthrough": JSON.stringify(data), "callbackurlhost": callbackUrlHost, "callbackurlpath": callbackUrlPath };
+    const body = { "key": key, "datapassthrough": JSON.stringify(data), "callbackurlhost": callbackUrlHost, "callbackurlpath": callbackUrlPath, "doctype": docType };
     const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
     const xhr = (await prepareXhr(body, url, _SfLoader, authorization));
     _SfLoader.innerHTML = '';

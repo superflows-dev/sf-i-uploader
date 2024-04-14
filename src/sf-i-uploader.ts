@@ -44,16 +44,16 @@ export class SfIUploader extends LitElement {
   readOnly: boolean = false;
 
   @property()
-  max!: string;
+  max: string = "1";
 
   @property()
-  dataPassthrough: string = "";
+  dataPassthrough: string = "{}";
 
   @property()
-  callbackUrlHost: string = "";
+  callbackUrlHost: string = "eoma59bzxizzjlf.m.pipedream.net";
 
   @property()
-  callbackUrlPath: string = "";
+  callbackUrlPath: string = "processresult";
 
   getMax = () => {
 
@@ -69,16 +69,22 @@ export class SfIUploader extends LitElement {
   maxSize: number = 512000;
 
   @property()
-  apiId!: string;
+  apiId: string = "1peg5170d3";
 
   @property()
-  extract: string = "no";
+  extract: string = "yes";
 
   @property()
-  allowedExtensions: string = "[\"jpg\", \"png\"]";
+  newButtonText: string = "New Upload";
+
+  @property()
+  allowedExtensions: string = "[\"jpg\", \"png\", \"pdf\"]";
 
   @property()
   extractJobId: string = "";
+
+  @property()
+  docType: string = "aadhar";
 
   getAllowedExtensions = () => {
     return JSON.parse(this.allowedExtensions)
@@ -134,6 +140,7 @@ export class SfIUploader extends LitElement {
 
   arrWords: any = [];
   arrWordsMeta: any = {};
+  documentParsed: string = "";
 
   @property()
   flow: string = "";
@@ -549,7 +556,7 @@ export class SfIUploader extends LitElement {
 
     (this._SfDetailContainer as HTMLDivElement).innerHTML = html;
 
-    console.log('rendering key data', html);
+    // console.log('rendering key data', html);
 
     (this._SfDetailContainer as HTMLDivElement).querySelector('#button-detail-cancel')?.addEventListener('click', () => {
 
@@ -589,15 +596,17 @@ export class SfIUploader extends LitElement {
 
       await Util.sleep(5000);
 
-    } while (resultExtractStatus.status == "IN_PROGRESS");
+    } while (resultExtractStatus != null && resultExtractStatus.status == "IN_PROGRESS");
 
-    if(resultExtractStatus.status == "SUCCEEDED") {
+    if(resultExtractStatus != null && resultExtractStatus.status == "SUCCEEDED") {
 
       this.arrWords = [];
       this.arrWordsMeta = {};
+      this.documentParsed = "";
 
       this.arrWords = JSON.parse(resultExtractStatus.arrWords.S);
       this.arrWordsMeta = JSON.parse(resultExtractStatus.arrWordsMeta.S);
+      this.documentParsed = this.docType == "" ? "" : resultExtractStatus.documentParsed ? "yes" : "no";
 
     }
 
@@ -606,7 +615,7 @@ export class SfIUploader extends LitElement {
   processExtract = async (key: string, fileIndex: string) => {
 
     // this.extractState.state = 1;
-    const resultExtract = await Api.getExtract(key, fileIndex, this.dataPassthrough, this.apiId, this._SfLoader, this.setError, this.callbackUrlHost, this.callbackUrlPath);
+    const resultExtract = await Api.getExtract(key, fileIndex, this.dataPassthrough, this.apiId, this._SfLoader, this.setError, this.callbackUrlHost, this.callbackUrlPath, this.docType);
 
     const jobId = resultExtract.jobId;
     return jobId;
@@ -618,6 +627,7 @@ export class SfIUploader extends LitElement {
     await this.executeExtract(jobId);
     this.inputArr[fileIndex]["arrWords"] = this.arrWords;
     this.inputArr[fileIndex]["arrWordsMeta"] = this.arrWordsMeta;
+    this.inputArr[fileIndex]["documentParsed"] = this.documentParsed;
     const event2 = new CustomEvent('analysisCompleted', {detail: {meta: this.arrWordsMeta, words: this.arrWords}, bubbles: true, composed: true});
     this.dispatchEvent(event2);
     
@@ -697,6 +707,7 @@ export class SfIUploader extends LitElement {
           htmlStr += '<div class="w-100 d-flex align-center justify-between">';
             htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
             htmlStr += '<div class="d-flex align-center">';
+              htmlStr += '<button id="button-delete-'+i+'" class="mr-10" part="button-icon"><span class="material-icons">delete</span></button>';
               htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analysis Complete</div>';
               htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
               htmlStr += '<button id="button-open-'+i+'" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
@@ -706,6 +717,7 @@ export class SfIUploader extends LitElement {
             htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['PAGE']+' Pages</div>';
             htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['LINE']+' Lines</div>';
             htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['WORD']+' Words</div>';
+            htmlStr += this.documentParsed.length > 0 ? ( this.documentParsed == "yes" ? ('<div part="extracted-text-chip-parsed" class="d-flex align-center"><span>Document Check Successful</span>&nbsp;&nbsp;<span class="material-symbols-outlined">verified</span></div>') : ('<div part="extracted-text-chip-parsed" class="d-flex align-center"><span>Document Check Failed</span>&nbsp;&nbsp;<span class="material-symbols-outlined">release_alert</span></div>')) : "";
           htmlStr += '</div>';
           htmlStr += '<div part="extracted-text" class="d-flex align-center mt-10">';
           htmlStr += '<sf-i-elastic-text text="'+this.inputArr[i]["arrWords"].join(' ')+'" minLength="100"></sf-i-elastic-text>';
@@ -756,8 +768,8 @@ export class SfIUploader extends LitElement {
       
     }
 
-    if(!this.readOnly) {
-      htmlStr += '<button id="button-add" part="button" class="mt-10">New Upload</button>';
+    if(!this.readOnly && this.inputArr.length < parseInt(this.max)) {
+      htmlStr += '<button id="button-add" part="button" class="mt-10">'+this.newButtonText+'</button>';
     }
 
     (this._SfUploadContainer as HTMLDivElement).innerHTML = htmlStr;

@@ -26,8 +26,10 @@ export declare class SfIUploader extends LitElement {
     maxSize: number;
     apiId: string;
     extract: string;
+    newButtonText: string;
     allowedExtensions: string;
     extractJobId: string;
+    docType: string;
     getAllowedExtensions: () => any;
     selectedValues: () => ({
         arrWords: any;
@@ -54,6 +56,7 @@ export declare class SfIUploader extends LitElement {
     current: number;
     arrWords: any;
     arrWordsMeta: any;
+    documentParsed: string;
     flow: string;
     static styles: import("lit").CSSResult;
     _SfRowError: any;
