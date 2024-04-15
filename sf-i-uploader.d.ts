@@ -57,6 +57,7 @@ export declare class SfIUploader extends LitElement {
     arrWords: any;
     arrWordsMeta: any;
     documentParsed: string;
+    possibleMatches: Array<string>;
     flow: string;
     static styles: import("lit").CSSResult;
     _SfRowError: any;

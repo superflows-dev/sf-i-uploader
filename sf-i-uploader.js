@@ -108,6 +108,7 @@ let SfIUploader = class SfIUploader extends LitElement {
         this.arrWords = [];
         this.arrWordsMeta = {};
         this.documentParsed = "";
+        this.possibleMatches = [];
         this.flow = "";
         // prepareXhr = async (data: any, url: string, loaderElement: any, authorization: any) => {
         //   if(loaderElement != null) {
@@ -190,6 +191,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                 this.arrWords = JSON.parse(resultExtractStatus.arrWords.S);
                 this.arrWordsMeta = JSON.parse(resultExtractStatus.arrWordsMeta.S);
                 this.documentParsed = this.docType == "" ? "" : resultExtractStatus.documentParsed ? "yes" : "no";
+                this.possibleMatches = this.docType == "" ? [] : resultExtractStatus.documentParsed ? resultExtractStatus.possibleMatches : [];
             }
         };
         this.processExtract = async (key, fileIndex) => {
@@ -280,6 +282,16 @@ let SfIUploader = class SfIUploader extends LitElement {
                     htmlStr += '<div part="extracted-text-chip">' + this.inputArr[i]["arrWordsMeta"]['WORD'] + ' Words</div>';
                     htmlStr += this.documentParsed.length > 0 ? (this.documentParsed == "yes" ? ('<div part="extracted-text-chip-parsed" class="d-flex align-center"><span>Document Check Successful</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">verified</span></div>') : ('<div part="extracted-text-chip-failed" class="d-flex align-center"><span>Document Check Failed</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">release_alert</span></div>')) : "";
                     htmlStr += '</div>';
+                    if (this.documentParsed) {
+                        htmlStr += '<div class="mt-10 w-100">';
+                        htmlStr += '<div part="matches-title">Possible matches</div>';
+                        htmlStr += '<div part="extracted-meta" class="d-flex align-center mt-10 w-100">';
+                        for (var j = 0; j < this.possibleMatches.length; j++) {
+                            htmlStr += ('<div part="matches">' + this.possibleMatches[j] + '</div>');
+                        }
+                        htmlStr += '</div>';
+                        htmlStr += '</div>';
+                    }
                     htmlStr += '<div part="extracted-text" class="d-flex align-center mt-10">';
                     htmlStr += '<sf-i-elastic-text text="' + this.inputArr[i]["arrWords"].join(' ') + '" minLength="100"></sf-i-elastic-text>';
                     htmlStr += '</div>';
