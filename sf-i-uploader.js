@@ -284,7 +284,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                     htmlStr += '</div>';
                     if (this.documentParsed) {
                         htmlStr += '<div class="mt-20 w-100">';
-                        htmlStr += '<div part="matches-title">Possible matches</div>';
+                        htmlStr += '<div part="matches-title">Possible Matches</div>';
                         htmlStr += '<div part="extracted-meta" class="d-flex align-center w-100">';
                         for (var j = 0; j < this.possibleMatches.length; j++) {
                             htmlStr += ('<div part="matches" class="mr-5">' + this.possibleMatches[j] + '</div>');
@@ -292,8 +292,11 @@ let SfIUploader = class SfIUploader extends LitElement {
                         htmlStr += '</div>';
                         htmlStr += '</div>';
                     }
+                    htmlStr += '<div class="mt-20 w-100">';
+                    htmlStr += '<div part="matches-title" >Extracted Text</div>';
                     htmlStr += '<div part="extracted-text" class="d-flex align-center mt-10">';
                     htmlStr += '<sf-i-elastic-text text="' + this.inputArr[i]["arrWords"].join(' ') + '" minLength="100"></sf-i-elastic-text>';
+                    htmlStr += '</div>';
                     htmlStr += '</div>';
                 }
                 else if (this.inputArr[i]["jobId"] != null) {
