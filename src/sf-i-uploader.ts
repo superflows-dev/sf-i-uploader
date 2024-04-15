@@ -730,7 +730,7 @@ export class SfIUploader extends LitElement {
             htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['LINE']+' Lines</div>';
             htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['WORD']+' Words</div>';
             htmlStr += this.documentParsed.length > 0 ? ( this.documentParsed == "yes" ? ('<div part="extracted-text-chip-parsed" class="d-flex align-center"><span>Document Check Successful</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">verified</span></div>') : ('<div part="extracted-text-chip-failed" class="d-flex align-center"><span>Document Check Failed</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">release_alert</span></div>')) : "";
-          htmlStr += '</div>';
+          htmlStr += '</div>'; 
           if(this.documentParsed) {
             htmlStr += '<div class="mt-20 w-100">';
               htmlStr += '<div part="matches-title">Possible Matches</div>';
@@ -742,7 +742,7 @@ export class SfIUploader extends LitElement {
             htmlStr += '</div>';
           }
           htmlStr += '<div class="mt-20 w-100">';
-            htmlStr += '<div part="matches-title">Extracted Text</div>';
+            htmlStr += '<div part="extracted-title">Extracted Text</div>';
             htmlStr += '<div part="extracted-text" class="d-flex align-center">';
             htmlStr += '<sf-i-elastic-text text="'+this.inputArr[i]["arrWords"].join(' ')+'" minLength="100"></sf-i-elastic-text>';
             htmlStr += '</div>';

@@ -293,7 +293,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                         htmlStr += '</div>';
                     }
                     htmlStr += '<div class="mt-20 w-100">';
-                    htmlStr += '<div part="matches-title">Extracted Text</div>';
+                    htmlStr += '<div part="extracted-title">Extracted Text</div>';
                     htmlStr += '<div part="extracted-text" class="d-flex align-center">';
                     htmlStr += '<sf-i-elastic-text text="' + this.inputArr[i]["arrWords"].join(' ') + '" minLength="100"></sf-i-elastic-text>';
                     htmlStr += '</div>';
