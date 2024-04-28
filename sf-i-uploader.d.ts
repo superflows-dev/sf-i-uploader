@@ -23,6 +23,7 @@ export declare class SfIUploader extends LitElement {
     callbackUrlHost: string;
     callbackUrlPath: string;
     getMax: () => number;
+    projectId: string;
     maxSize: number;
     apiId: string;
     extract: string;

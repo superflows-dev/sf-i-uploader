@@ -5,10 +5,14 @@ const prepareXhr = async (data, url, loaderElement, authorization) => {
     }
     return await Util.callApi(url, data, authorization);
 };
-const uploadBlock = async (key, block, data, apiId, _SfLoader, callbackError) => {
+const uploadBlock = async (key, block, data, apiId, _SfLoader, callbackError, projectId) => {
     let url = "https://" + apiId + ".execute-api.us-east-1.amazonaws.com/test/upload";
     const body = { "type": "data", "key": key, "data": data, "block": block };
     const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
+    if (projectId.length > 0) {
+        body["projectid"] = projectId;
+    }
+    console.log('uploading block', projectId);
     const xhr = (await prepareXhr(body, url, _SfLoader, authorization));
     _SfLoader.innerHTML = '';
     if (xhr.status == 200) {
@@ -18,10 +22,13 @@ const uploadBlock = async (key, block, data, apiId, _SfLoader, callbackError) =>
         callbackError(jsonRespose.error);
     }
 };
-const uploadMeta = async (key, ext, numblocks, apiId, _SfLoader, callbackError) => {
+const uploadMeta = async (key, ext, numblocks, apiId, _SfLoader, callbackError, projectId) => {
     let url = "https://" + apiId + ".execute-api.us-east-1.amazonaws.com/test/upload";
     const body = { "type": "meta", "key": key, "ext": ext, "numblocks": numblocks };
     const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
+    if (projectId.length > 0) {
+        body["projectid"] = projectId;
+    }
     const xhr = (await prepareXhr(body, url, _SfLoader, authorization));
     _SfLoader.innerHTML = '';
     if (xhr.status == 200) {
@@ -31,10 +38,13 @@ const uploadMeta = async (key, ext, numblocks, apiId, _SfLoader, callbackError) 
         callbackError(jsonRespose.error);
     }
 };
-const getExtractStatus = async (jobid, apiId, _SfLoader, callbackError) => {
+const getExtractStatus = async (jobid, apiId, _SfLoader, callbackError, projectId) => {
     let url = "https://" + apiId + ".execute-api.us-east-1.amazonaws.com/test/getextractstatus";
     const body = { "jobid": jobid };
     const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
+    if (projectId.length > 0) {
+        body["projectid"] = projectId;
+    }
     const xhr = (await prepareXhr(body, url, _SfLoader, authorization));
     _SfLoader.innerHTML = '';
     if (xhr.status == 200) {
@@ -46,7 +56,7 @@ const getExtractStatus = async (jobid, apiId, _SfLoader, callbackError) => {
         callbackError(jsonRespose.error);
     }
 };
-const getExtract = async (key, fileIndex, dataPassthrough, apiId, _SfLoader, callbackError, callbackUrlHost, callbackUrlPath, docType) => {
+const getExtract = async (key, fileIndex, dataPassthrough, apiId, _SfLoader, callbackError, callbackUrlHost, callbackUrlPath, docType, projectId) => {
     let url = "https://" + apiId + ".execute-api.us-east-1.amazonaws.com/test/getextract";
     var data = {};
     data.fileIndex = fileIndex;
@@ -54,6 +64,9 @@ const getExtract = async (key, fileIndex, dataPassthrough, apiId, _SfLoader, cal
     data.data = dataPassthrough;
     const body = { "key": key, "datapassthrough": JSON.stringify(data), "callbackurlhost": callbackUrlHost, "callbackurlpath": callbackUrlPath, "doctype": docType };
     const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
+    if (projectId.length > 0) {
+        body["projectid"] = projectId;
+    }
     const xhr = (await prepareXhr(body, url, _SfLoader, authorization));
     _SfLoader.innerHTML = '';
     if (xhr.status == 200) {
@@ -65,10 +78,13 @@ const getExtract = async (key, fileIndex, dataPassthrough, apiId, _SfLoader, cal
         callbackError(jsonRespose.error);
     }
 };
-const getKeyData = async (key, apiId, _SfLoader, callbackSuccess, callbackError) => {
+const getKeyData = async (key, apiId, _SfLoader, callbackSuccess, callbackError, projectId) => {
     let url = "https://" + apiId + ".execute-api.us-east-1.amazonaws.com/test/get";
     const body = { "key": key };
     const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
+    if (projectId.length > 0) {
+        body["projectid"] = projectId;
+    }
     const xhr = (await prepareXhr(body, url, _SfLoader, authorization));
     _SfLoader.innerHTML = '';
     if (xhr.status == 200) {

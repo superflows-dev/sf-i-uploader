@@ -10,14 +10,19 @@ const prepareXhr = async (data: any, url: string, loaderElement: any, authorizat
 }
 
 
-const uploadBlock = async (key: string, block: string, data: string, apiId: string, _SfLoader: any, callbackError: any) => {
+const uploadBlock = async (key: string, block: string, data: string, apiId: string, _SfLoader: any, callbackError: any, projectId: string) => {
 
     let url = "https://"+apiId+".execute-api.us-east-1.amazonaws.com/test/upload";
 
-    const body = { "type": "data", "key": key, "data": data, "block": block} 
+    const body: any = { "type": "data", "key": key, "data": data, "block": block} 
     const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
+    if(projectId.length > 0) {
+      body["projectid"] = projectId
+    }
+    console.log('uploading block', projectId);
     const xhr : any = (await prepareXhr(body, url, _SfLoader, authorization)) as any;
     _SfLoader.innerHTML = '';
+
     if(xhr.status == 200) {
       
     } else {
@@ -28,14 +33,18 @@ const uploadBlock = async (key: string, block: string, data: string, apiId: stri
   }
 
 
-const uploadMeta = async (key: string, ext: string, numblocks: string, apiId: string, _SfLoader: any, callbackError: any) => {
+const uploadMeta = async (key: string, ext: string, numblocks: string, apiId: string, _SfLoader: any, callbackError: any, projectId: string) => {
 
     let url = "https://"+apiId+".execute-api.us-east-1.amazonaws.com/test/upload";
 
-    const body = { "type": "meta", "key": key, "ext": ext, "numblocks": numblocks} 
+    const body: any = { "type": "meta", "key": key, "ext": ext, "numblocks": numblocks} 
     const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
+    if(projectId.length > 0) {
+      body["projectid"] = projectId
+    }
     const xhr : any = (await prepareXhr(body, url, _SfLoader, authorization)) as any;
     _SfLoader.innerHTML = '';
+    
     if(xhr.status == 200) {
       
     } else {
@@ -45,14 +54,18 @@ const uploadMeta = async (key: string, ext: string, numblocks: string, apiId: st
 
 }
 
-const getExtractStatus = async (jobid: string, apiId: string, _SfLoader: any, callbackError: any) => {
+const getExtractStatus = async (jobid: string, apiId: string, _SfLoader: any, callbackError: any, projectId: string) => {
 
     let url = "https://"+apiId+".execute-api.us-east-1.amazonaws.com/test/getextractstatus";
 
-    const body = { "jobid": jobid} 
+    const body: any = { "jobid": jobid} 
     const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
+    if(projectId.length > 0) {
+      body["projectid"] = projectId
+    }
     const xhr : any = (await prepareXhr(body, url, _SfLoader, authorization)) as any;
     _SfLoader.innerHTML = '';
+    
     if(xhr.status == 200) {
 
       const jsonRespose = JSON.parse(xhr.responseText);
@@ -65,7 +78,7 @@ const getExtractStatus = async (jobid: string, apiId: string, _SfLoader: any, ca
 
 }
 
-const getExtract = async (key: string, fileIndex: string, dataPassthrough: any, apiId: string, _SfLoader: any, callbackError: any, callbackUrlHost: string, callbackUrlPath: string, docType: string) => {
+const getExtract = async (key: string, fileIndex: string, dataPassthrough: any, apiId: string, _SfLoader: any, callbackError: any, callbackUrlHost: string, callbackUrlPath: string, docType: string, projectId: string) => {
 
     let url = "https://"+apiId+".execute-api.us-east-1.amazonaws.com/test/getextract";
 
@@ -75,10 +88,14 @@ const getExtract = async (key: string, fileIndex: string, dataPassthrough: any, 
     data.key = key;
     data.data = dataPassthrough;
 
-    const body = { "key": key, "datapassthrough": JSON.stringify(data), "callbackurlhost": callbackUrlHost, "callbackurlpath": callbackUrlPath, "doctype": docType};
+    const body: any = { "key": key, "datapassthrough": JSON.stringify(data), "callbackurlhost": callbackUrlHost, "callbackurlpath": callbackUrlPath, "doctype": docType};
     const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
+    if(projectId.length > 0) {
+      body["projectid"] = projectId
+    }
     const xhr : any = (await prepareXhr(body, url, _SfLoader, authorization)) as any;
     _SfLoader.innerHTML = '';
+    
     if(xhr.status == 200) {
 
       const jsonRespose = JSON.parse(xhr.responseText);
@@ -92,14 +109,18 @@ const getExtract = async (key: string, fileIndex: string, dataPassthrough: any, 
   }
 
 
-const getKeyData = async (key: string, apiId: string, _SfLoader: any, callbackSuccess: any, callbackError: any) => {
+const getKeyData = async (key: string, apiId: string, _SfLoader: any, callbackSuccess: any, callbackError: any, projectId: string) => {
 
     let url = "https://"+apiId+".execute-api.us-east-1.amazonaws.com/test/get";
 
-    const body = { "key": key} 
+    const body: any = { "key": key} 
     const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
+    if(projectId.length > 0) {
+      body["projectid"] = projectId;
+    }
     const xhr : any = (await prepareXhr(body, url, _SfLoader, authorization)) as any;
     _SfLoader.innerHTML = '';
+    
     if(xhr.status == 200) {
 
       const jsonRespose = JSON.parse(xhr.responseText);

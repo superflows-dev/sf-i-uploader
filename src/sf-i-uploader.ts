@@ -65,11 +65,15 @@ export class SfIUploader extends LitElement {
 
   }
 
+
+  @property()
+  projectId: string = "";
+
   @property()
   maxSize: number = 512000;
 
   @property()
-  apiId: string = "1peg5170d3";
+  apiId: string = "qegqubqm14";
 
   @property()
   extract: string = "yes";
@@ -84,7 +88,7 @@ export class SfIUploader extends LitElement {
   extractJobId: string = "";
 
   @property()
-  docType: string = "aadhar";
+  docType: string = "";
 
   getAllowedExtensions = () => {
     return JSON.parse(this.allowedExtensions)
@@ -587,7 +591,7 @@ export class SfIUploader extends LitElement {
 
   chunkify = (base64String: string) => {
 
-    const chunks = base64String.match(/.{1,8192}/g)
+    const chunks = base64String.match(/.{1,4096}/g)
     return chunks;
 
   }
@@ -598,7 +602,7 @@ export class SfIUploader extends LitElement {
 
     do {
 
-      resultExtractStatus = await Api.getExtractStatus(jobId, this.apiId, this._SfLoader, this.setError);
+      resultExtractStatus = await Api.getExtractStatus(jobId, this.apiId, this._SfLoader, this.setError, this.projectId);
 
       await Util.sleep(5000);
 
@@ -622,7 +626,7 @@ export class SfIUploader extends LitElement {
   processExtract = async (key: string, fileIndex: string) => {
 
     // this.extractState.state = 1;
-    const resultExtract = await Api.getExtract(key, fileIndex, this.dataPassthrough, this.apiId, this._SfLoader, this.setError, this.callbackUrlHost, this.callbackUrlPath, this.docType);
+    const resultExtract = await Api.getExtract(key, fileIndex, this.dataPassthrough, this.apiId, this._SfLoader, this.setError, this.callbackUrlHost, this.callbackUrlPath, this.docType, this.projectId);
 
     const jobId = resultExtract.jobId;
     return jobId;
@@ -653,10 +657,10 @@ export class SfIUploader extends LitElement {
       const run = async () => {
 
         const chunks = this.chunkify(reader.result as string);
-        await Api.uploadMeta(key, ext, chunks?.length + "", this.apiId, this._SfLoader, this.setError)
+        await Api.uploadMeta(key, ext, chunks?.length + "", this.apiId, this._SfLoader, this.setError, this.projectId)
         for(var i = 0; i < chunks!.length; i++) {
           this.uploadProgressReceiver = (this._SfUploadContainer as HTMLDivElement).querySelector('#upload-row-'+fileIndex);
-          await Api.uploadBlock(key, i + "", chunks![i] + "", this.apiId, this._SfLoader, this.setError);
+          await Api.uploadBlock(key, i + "", chunks![i] + "", this.apiId, this._SfLoader, this.setError, this.projectId);
           this.uploadProgress.progress = parseInt((((i+1)*100)/chunks!.length) + "");
         }
         for(var i = 0; i < this.inputArr.length; i++) {
@@ -857,7 +861,7 @@ export class SfIUploader extends LitElement {
 
       (this._SfUploadContainer as HTMLDivElement).querySelector('#button-open-'+i)?.addEventListener('click', (ev: any) => {
         const index = ev.currentTarget.id.split("-")[2];
-        Api.getKeyData(this.inputArr[index]['key'], this.apiId, this._SfLoader, this.renderKeyData, this.setError)
+        Api.getKeyData(this.inputArr[index]['key'], this.apiId, this._SfLoader, this.renderKeyData, this.setError, this.projectId)
       });
 
     }

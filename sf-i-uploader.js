@@ -52,13 +52,14 @@ let SfIUploader = class SfIUploader extends LitElement {
                 return 0;
             }
         };
+        this.projectId = "";
         this.maxSize = 512000;
-        this.apiId = "1peg5170d3";
+        this.apiId = "qegqubqm14";
         this.extract = "yes";
         this.newButtonText = "New Upload";
         this.allowedExtensions = "[\"jpg\", \"png\", \"pdf\"]";
         this.extractJobId = "";
-        this.docType = "aadhar";
+        this.docType = "";
         this.getAllowedExtensions = () => {
             return JSON.parse(this.allowedExtensions);
         };
@@ -175,13 +176,13 @@ let SfIUploader = class SfIUploader extends LitElement {
             });
         };
         this.chunkify = (base64String) => {
-            const chunks = base64String.match(/.{1,8192}/g);
+            const chunks = base64String.match(/.{1,4096}/g);
             return chunks;
         };
         this.executeExtract = async (jobId) => {
             var resultExtractStatus;
             do {
-                resultExtractStatus = await Api.getExtractStatus(jobId, this.apiId, this._SfLoader, this.setError);
+                resultExtractStatus = await Api.getExtractStatus(jobId, this.apiId, this._SfLoader, this.setError, this.projectId);
                 await Util.sleep(5000);
             } while (resultExtractStatus != null && resultExtractStatus.status == "IN_PROGRESS");
             if (resultExtractStatus != null && resultExtractStatus.status == "SUCCEEDED") {
@@ -196,7 +197,7 @@ let SfIUploader = class SfIUploader extends LitElement {
         };
         this.processExtract = async (key, fileIndex) => {
             // this.extractState.state = 1;
-            const resultExtract = await Api.getExtract(key, fileIndex, this.dataPassthrough, this.apiId, this._SfLoader, this.setError, this.callbackUrlHost, this.callbackUrlPath, this.docType);
+            const resultExtract = await Api.getExtract(key, fileIndex, this.dataPassthrough, this.apiId, this._SfLoader, this.setError, this.callbackUrlHost, this.callbackUrlPath, this.docType, this.projectId);
             const jobId = resultExtract.jobId;
             return jobId;
         };
@@ -217,10 +218,10 @@ let SfIUploader = class SfIUploader extends LitElement {
             reader.onloadend = () => {
                 const run = async () => {
                     const chunks = this.chunkify(reader.result);
-                    await Api.uploadMeta(key, ext, (chunks === null || chunks === void 0 ? void 0 : chunks.length) + "", this.apiId, this._SfLoader, this.setError);
+                    await Api.uploadMeta(key, ext, (chunks === null || chunks === void 0 ? void 0 : chunks.length) + "", this.apiId, this._SfLoader, this.setError, this.projectId);
                     for (var i = 0; i < chunks.length; i++) {
                         this.uploadProgressReceiver = this._SfUploadContainer.querySelector('#upload-row-' + fileIndex);
-                        await Api.uploadBlock(key, i + "", chunks[i] + "", this.apiId, this._SfLoader, this.setError);
+                        await Api.uploadBlock(key, i + "", chunks[i] + "", this.apiId, this._SfLoader, this.setError, this.projectId);
                         this.uploadProgress.progress = parseInt((((i + 1) * 100) / chunks.length) + "");
                     }
                     for (var i = 0; i < this.inputArr.length; i++) {
@@ -394,7 +395,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                 });
                 (_f = this._SfUploadContainer.querySelector('#button-open-' + i)) === null || _f === void 0 ? void 0 : _f.addEventListener('click', (ev) => {
                     const index = ev.currentTarget.id.split("-")[2];
-                    Api.getKeyData(this.inputArr[index]['key'], this.apiId, this._SfLoader, this.renderKeyData, this.setError);
+                    Api.getKeyData(this.inputArr[index]['key'], this.apiId, this._SfLoader, this.renderKeyData, this.setError, this.projectId);
                 });
             }
         };
@@ -824,6 +825,9 @@ __decorate([
 __decorate([
     property()
 ], SfIUploader.prototype, "callbackUrlPath", void 0);
+__decorate([
+    property()
+], SfIUploader.prototype, "projectId", void 0);
 __decorate([
     property()
 ], SfIUploader.prototype, "maxSize", void 0);
