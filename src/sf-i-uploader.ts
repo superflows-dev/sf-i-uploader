@@ -470,7 +470,23 @@ export class SfIUploader extends LitElement {
       }
 
     }
-
+    
+    .analyzing-loader {
+      width: 20px;
+      aspect-ratio: 4;
+      --_g: no-repeat radial-gradient(circle closest-side,gray 90%,#0000);
+      background: 
+        var(--_g) 0%   50%,
+        var(--_g) 50%  50%,
+        var(--_g) 100% 50%;
+      background-size: calc(100%/3) 100%;
+      animation: l7 1.5s infinite linear;
+    }
+    @keyframes l7 {
+        33%{background-size:calc(100%/3) 0%  ,calc(100%/3) 100%,calc(100%/3) 100%}
+        50%{background-size:calc(100%/3) 100%,calc(100%/3) 0%  ,calc(100%/3) 100%}
+        66%{background-size:calc(100%/3) 100%,calc(100%/3) 100%,calc(100%/3) 0%  }
+    }
   `;
 
   @query('.div-row-error')
@@ -699,11 +715,12 @@ export class SfIUploader extends LitElement {
   clearUploads = () => {
     this.inputArr = [];    
   }
+  
 
   populateInputs = () => {
 
     var htmlStr = '';
-
+    
     for(var i = 0; i < this.inputArr.length; i++) {
       htmlStr += '<div part="input" id="upload-row-'+i+'">';
         htmlStr += '<div class="d-flex align-center justify-between flex-wrap">';
@@ -758,7 +775,7 @@ export class SfIUploader extends LitElement {
           const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
           htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
           htmlStr += '<div class="d-flex align-center">';
-          htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analyzing...</div>';
+          htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analyzing</div><div class="mr-10 mt-10 analyzing-loader"></div>';
           htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
           htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
           htmlStr += '</div>';
