@@ -470,7 +470,7 @@ export class SfIUploader extends LitElement {
       }
 
     }
-    
+
     .analyzing-loader {
       width: 20px;
       aspect-ratio: 4;
@@ -852,7 +852,7 @@ export class SfIUploader extends LitElement {
           return;
         }
 
-        if(!this.getAllowedExtensions().includes(ext)) {
+        if(!this.getAllowedExtensions().includes(ext.toLowerCase())) {
           this.setError('This file extension is not allowed');
           setTimeout(() => {
             this.clearMessages();
