@@ -625,7 +625,6 @@ export class SfIUploader extends LitElement {
     } while (resultExtractStatus != null && resultExtractStatus.status == "IN_PROGRESS");
 
     if(resultExtractStatus != null && resultExtractStatus.status == "SUCCEEDED") {
-
       this.arrWords = [];
       this.arrWordsMeta = {};
       this.documentParsed = "";
@@ -757,7 +756,7 @@ export class SfIUploader extends LitElement {
               htmlStr += '<div part="matches-title">Possible Matches</div>';
               htmlStr += '<div part="extracted-meta" class="d-flex align-center w-100">';
                 for(var j = 0; j < this.possibleMatches.length; j++) {
-                  htmlStr += ('<div part="matches" class="mr-5">'+this.possibleMatches[j]+'</div>');
+                  htmlStr += ('<div part="matches" class="mr-10">'+this.possibleMatches[j]+'</div>');
                 }
               htmlStr += '</div>';
             htmlStr += '</div>';
