@@ -774,7 +774,7 @@ export class SfIUploader extends LitElement {
           const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
           htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
           htmlStr += '<div class="d-flex align-center">';
-          htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analyzing</div><div class="mr-10 mt-10 analyzing-loader"></div>';
+          htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analyzing</div><div class="mr-10 analyzing-loader"></div>';
           htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
           htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
           htmlStr += '</div>';
