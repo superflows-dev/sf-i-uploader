@@ -170,6 +170,13 @@ export class SfIUploader extends LitElement {
       visibility: hidden
     }
 
+    #message-container {
+      left: 0px;
+      top: 0px;
+      overflow-y: auto;
+      z-index: 97;
+    }
+
     #detail-container {
       width: 90%;
       margin-left: 5%;
@@ -510,6 +517,9 @@ export class SfIUploader extends LitElement {
   @query('#detail-container')
   _SfDetailContainer: any;
 
+  @query('#message-container')
+  _SfMessageContainer: any;
+
   @query('#button-add')
   _SfButtonAdd: any;
 
@@ -552,6 +562,21 @@ export class SfIUploader extends LitElement {
 
   }
   
+  renderMessageData = (message: string) => {
+
+    (this._SfMessageContainer as HTMLDivElement).style.display = 'block';
+
+    var html = '';
+
+    html += '<div class="d-flex">';
+    html += '<div part="sf-upload-message">' + message + '</div>'
+    html += '</div>';
+
+
+    (this._SfMessageContainer as HTMLDivElement).innerHTML = html;
+
+  }
+
   renderKeyData = (ext: string, data: string) => {
 
     (this._SfDetailContainer as HTMLDivElement).style.display = 'block';
@@ -746,9 +771,9 @@ export class SfIUploader extends LitElement {
             htmlStr += '</div>';
           htmlStr += '</div>';
           htmlStr += '<div part="extracted-meta" class="d-flex align-center mt-10 w-100">';
-            htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['PAGE']+' Pages</div>';
-            htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['LINE']+' Lines</div>';
-            htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['WORD']+' Words</div>';
+            htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['PAGE'] ?? 0 +' Page(s)</div>';
+            htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['LINE'] ?? 0 +' Line(s)</div>';
+            htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['WORD'] ?? 0 +' Word(s)</div>';
             htmlStr += this.documentParsed.length > 0 ? ( this.documentParsed == "yes" ? ('<div part="extracted-text-chip-parsed" class="d-flex align-center"><span>Document Check Successful</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">verified</span></div>') : ('<div part="extracted-text-chip-failed" class="d-flex align-center"><span>Document Check Failed</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">release_alert</span></div>')) : "";
           htmlStr += '</div>'; 
           if(this.documentParsed) {
@@ -811,14 +836,20 @@ export class SfIUploader extends LitElement {
           htmlStr += '<div class="progress-bar progress-bar-right" id="progress-bar-right-'+i+'"></div>'
           htmlStr += '</div>'
         }
+
+        if(this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null)){
+          htmlStr += '<div id="message-container" class="hide" part="message-container"></div>'
+        }
       htmlStr += '</div>';
-      
-      
+      if(this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null)){
+        Api.getMessageByDocType(this.docType,this.apiId, this._SfLoader, this.renderMessageData, this.setError);
+      }
     }
 
     if(!this.readOnly && this.inputArr.length < parseInt(this.max)) {
       htmlStr += '<button id="button-add" part="button" class="mt-10">'+this.newButtonText+'</button>';
     }
+    
 
     (this._SfUploadContainer as HTMLDivElement).innerHTML = htmlStr;
 

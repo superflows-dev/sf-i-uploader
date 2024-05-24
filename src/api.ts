@@ -54,6 +54,28 @@ const uploadMeta = async (key: string, ext: string, numblocks: string, apiId: st
 
 }
 
+const getMessageByDocType = async (docType: string, apiId: string, _SfLoader: any, callbackSuccess: any, callbackError: any) => {
+
+  let url = "https://"+apiId+".execute-api.us-east-1.amazonaws.com/test/getmessage";
+
+  const body: any = { "docType": docType} 
+  const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
+  const xhr : any = (await prepareXhr(body, url, _SfLoader, authorization)) as any;
+  _SfLoader.innerHTML = '';
+  
+  if(xhr.status == 200) {
+
+    const jsonRespose = JSON.parse(xhr.responseText);
+    callbackSuccess(jsonRespose.message);
+    return;
+    
+  } else {
+    const jsonRespose = JSON.parse(xhr.responseText);
+    callbackError(jsonRespose.error)
+  }
+
+}
+
 const getExtractStatus = async (jobid: string, apiId: string, _SfLoader: any, callbackError: any, projectId: string) => {
 
     let url = "https://"+apiId+".execute-api.us-east-1.amazonaws.com/test/getextractstatus";
@@ -134,7 +156,7 @@ const getKeyData = async (key: string, apiId: string, _SfLoader: any, callbackSu
 }
 
 const exportFunctions = {
-    uploadBlock, uploadMeta, getExtractStatus, getExtract, getKeyData, prepareXhr
+    uploadBlock, uploadMeta, getExtractStatus, getExtract, getKeyData, prepareXhr, getMessageByDocType
  };
  
  export default exportFunctions;
