@@ -137,6 +137,9 @@ export class SfIUploader extends LitElement {
 
   inputArr: any[] = [];
 
+  inputArrInterval: any = null;
+  uploadProgressInterval: any = null;
+
   uploadProgress: any = {progress: 0};
   uploadProgressReceiver: any = null;
 
@@ -950,8 +953,8 @@ export class SfIUploader extends LitElement {
 
   initListeners = () => {
 
-    Util.listenForChange(this.inputArr, this.processChangeInput)
-    Util.listenForChange(this.uploadProgress, this.processChangeUploadProgress)
+    this.inputArrInterval = Util.listenForChange(this.inputArr, this.processChangeInput)
+    this. uploadProgressInterval = Util.listenForChange(this.uploadProgress, this.processChangeUploadProgress)
 
   }
 
@@ -1007,6 +1010,16 @@ export class SfIUploader extends LitElement {
   
   override connectedCallback() {
     super.connectedCallback()
+  }
+
+  override disconnectedCallback() {
+    if(this.inputArrInterval != null){
+      clearInterval(this.inputArrInterval);
+    }
+    if(this.uploadProgressInterval != null){
+      clearInterval(this.uploadProgressInterval);
+    }
+    super.disconnectedCallback()
   }
   
   override render() {
