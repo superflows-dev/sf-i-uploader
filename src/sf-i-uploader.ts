@@ -562,7 +562,7 @@ export class SfIUploader extends LitElement {
 
   }
   
-  renderMessageData = (message: string) => {
+  renderMessageData = (message: string, verify: [string]) => {
 
     (this._SfMessageContainer as HTMLDivElement).style.display = 'block';
 
@@ -571,6 +571,17 @@ export class SfIUploader extends LitElement {
     html += '<div class="d-flex">';
     html += '<div part="sf-upload-message">' + message + '</div>'
     html += '</div>';
+
+    if(verify.length > 0){
+      html += '<div class="d-flex">';
+      html += '<div part="sf-upload-message">Document must contain following words</div>';
+      html += '</div>';
+      html += '<div class="d-flex">';
+      verify.forEach(verifyWord => {
+        html += '<div class="mr-10 upload-status" part="doctype-verify-badge">'+verifyWord+'</div>';  
+      });
+      html += '</div>';
+    }
 
 
     (this._SfMessageContainer as HTMLDivElement).innerHTML = html;
@@ -771,9 +782,21 @@ export class SfIUploader extends LitElement {
             htmlStr += '</div>';
           htmlStr += '</div>';
           htmlStr += '<div part="extracted-meta" class="d-flex align-center mt-10 w-100">';
-            htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['PAGE'] ?? 0 +' Page(s)</div>';
-            htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['LINE'] ?? 0 +' Line(s)</div>';
-            htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['WORD'] ?? 0 +' Word(s)</div>';
+            if(this.inputArr[i]["arrWordsMeta"]['PAGE'] != null){
+              htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['PAGE'] +' Page(s)</div>';
+            }else{
+              htmlStr += '<div part="extracted-text-chip">0 Page(s)</div>';
+            }
+            if(this.inputArr[i]["arrWordsMeta"]['LINE'] != null){
+              htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['LINE'] +' Line(s)</div>';
+            }else{
+              htmlStr += '<div part="extracted-text-chip">0 Line(s)</div>';
+            }
+            if(this.inputArr[i]["arrWordsMeta"]['WORD'] != null){
+              htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['WORD'] +' Word(s)</div>';
+            }else{
+              htmlStr += '<div part="extracted-text-chip">0 Word(s)</div>';
+            }
             htmlStr += this.documentParsed.length > 0 ? ( this.documentParsed == "yes" ? ('<div part="extracted-text-chip-parsed" class="d-flex align-center"><span>Document Check Successful</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">verified</span></div>') : ('<div part="extracted-text-chip-failed" class="d-flex align-center"><span>Document Check Failed</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">release_alert</span></div>')) : "";
           htmlStr += '</div>'; 
           if(this.documentParsed) {
