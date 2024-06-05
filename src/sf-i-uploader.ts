@@ -577,7 +577,7 @@ export class SfIUploader extends LitElement {
 
     if(verify.length > 0){
       html += '<div class="d-flex">';
-      html += '<div part="sf-upload-message">Document must contain following words</div>';
+      html += '<div part="sf-upload-submessage">Document must contain following words</div>';
       html += '</div>';
       html += '<div class="d-flex">';
       verify.forEach(verifyWord => {
@@ -765,7 +765,7 @@ export class SfIUploader extends LitElement {
         if(this.inputArr[i].file == null) {
 
           htmlStr += '<input id="file-'+i+'" type="file" />';
-          htmlStr += '<div class="d-flex align-center justify-between flex-wrap">';
+          htmlStr += '<div class="d-flex align-center justify-between flex-wrap" part="upload-buttons-container">';
           htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>')
           htmlStr += '<button id="button-delete-'+i+'" part="button-icon"><span class="material-icons">delete</span></button>';
           htmlStr += '</div>';
@@ -776,7 +776,7 @@ export class SfIUploader extends LitElement {
           const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
           htmlStr += '<div class="w-100 d-flex align-center justify-between">';
             htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
-            htmlStr += '<div class="d-flex align-center">';
+            htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
               htmlStr += '<button id="button-delete-'+i+'" class="mr-10" part=""><span class="material-icons">delete</span></button>';
               htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analysis Complete</div>';
               htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
@@ -824,7 +824,7 @@ export class SfIUploader extends LitElement {
           const fileName = this.inputArr[i]['file'].name;
           const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
           htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
-          htmlStr += '<div class="d-flex align-center">';
+          htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
           htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analyzing</div><div class="mr-10 analyzing-loader"></div>';
           htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
           htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
@@ -834,7 +834,7 @@ export class SfIUploader extends LitElement {
           const fileName = this.inputArr[i]['file'].name;
           const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
           htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
-          htmlStr += '<div class="d-flex align-center">';
+          htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
           htmlStr += '<div class="progress-number mr-10 upload-status" part="upload-status"></div>';
           htmlStr += '<div class="mr-10 upload-status" part="upload-status">Upload Complete</div>';
           htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
@@ -845,7 +845,7 @@ export class SfIUploader extends LitElement {
           const fileName = this.inputArr[i]['file'].name;
           const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
           htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
-          htmlStr += '<div class="d-flex align-center">';
+          htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
           htmlStr += '<div class="progress-number mr-10 upload-status" part="upload-status"></div>';
           htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
           htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
