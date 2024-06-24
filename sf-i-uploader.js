@@ -103,6 +103,8 @@ let SfIUploader = class SfIUploader extends LitElement {
             return values;
         };
         this.inputArr = [];
+        this.inputArrInterval = null;
+        this.uploadProgressInterval = null;
         this.uploadProgress = { progress: 0 };
         this.uploadProgressReceiver = null;
         this.current = 0;
@@ -139,6 +141,24 @@ let SfIUploader = class SfIUploader extends LitElement {
             element.querySelector('.progress-number').innerHTML = value + '% Uploaded';
             element.querySelector('.progress-bar-right').style.width = (100 - parseInt(value)) + '%';
             element.querySelector('.progress-bar-left').style.width = value + '%';
+        };
+        this.renderMessageData = (message, verify) => {
+            this._SfMessageContainer.style.display = 'block';
+            var html = '';
+            html += '<div class="d-flex">';
+            html += '<div part="sf-upload-message">' + message + '</div>';
+            html += '</div>';
+            if (verify.length > 0) {
+                html += '<div class="d-flex">';
+                html += '<div part="sf-upload-submessage">It must contain following words</div>';
+                html += '</div>';
+                html += '<div class="d-flex">';
+                verify.forEach(verifyWord => {
+                    html += '<div class="mr-10 upload-status" part="doctype-verify-badge">' + verifyWord + '</div>';
+                });
+                html += '</div>';
+            }
+            this._SfMessageContainer.innerHTML = html;
         };
         this.renderKeyData = (ext, data) => {
             var _a, _b;
@@ -259,7 +279,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                 htmlStr += '<div class="d-flex align-center justify-between flex-wrap">';
                 if (this.inputArr[i].file == null) {
                     htmlStr += '<input id="file-' + i + '" type="file" />';
-                    htmlStr += '<div class="d-flex align-center justify-between flex-wrap">';
+                    htmlStr += '<div class="d-flex align-center justify-between flex-wrap" part="upload-buttons-container">';
                     htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">' + this.docType + '</div>');
                     htmlStr += '<button id="button-delete-' + i + '" part="button-icon"><span class="material-icons">delete</span></button>';
                     htmlStr += '</div>';
@@ -269,7 +289,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                     const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
                     htmlStr += '<div class="w-100 d-flex align-center justify-between">';
                     htmlStr += '<div class="mr-10"><sf-i-elastic-text text="' + fileName + '" minLength="20"></sf-i-elastic-text></div>';
-                    htmlStr += '<div class="d-flex align-center">';
+                    htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
                     htmlStr += '<button id="button-delete-' + i + '" class="mr-10" part=""><span class="material-icons">delete</span></button>';
                     htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analysis Complete</div>';
                     htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">' + this.docType + '</div>');
@@ -278,9 +298,24 @@ let SfIUploader = class SfIUploader extends LitElement {
                     htmlStr += '</div>';
                     htmlStr += '</div>';
                     htmlStr += '<div part="extracted-meta" class="d-flex align-center mt-10 w-100">';
-                    htmlStr += '<div part="extracted-text-chip">' + this.inputArr[i]["arrWordsMeta"]['PAGE'] + ' Pages</div>';
-                    htmlStr += '<div part="extracted-text-chip">' + this.inputArr[i]["arrWordsMeta"]['LINE'] + ' Lines</div>';
-                    htmlStr += '<div part="extracted-text-chip">' + this.inputArr[i]["arrWordsMeta"]['WORD'] + ' Words</div>';
+                    if (this.inputArr[i]["arrWordsMeta"]['PAGE'] != null) {
+                        htmlStr += '<div part="extracted-text-chip">' + this.inputArr[i]["arrWordsMeta"]['PAGE'] + ' Page(s)</div>';
+                    }
+                    else {
+                        htmlStr += '<div part="extracted-text-chip">0 Page(s)</div>';
+                    }
+                    if (this.inputArr[i]["arrWordsMeta"]['LINE'] != null) {
+                        htmlStr += '<div part="extracted-text-chip">' + this.inputArr[i]["arrWordsMeta"]['LINE'] + ' Line(s)</div>';
+                    }
+                    else {
+                        htmlStr += '<div part="extracted-text-chip">0 Line(s)</div>';
+                    }
+                    if (this.inputArr[i]["arrWordsMeta"]['WORD'] != null) {
+                        htmlStr += '<div part="extracted-text-chip">' + this.inputArr[i]["arrWordsMeta"]['WORD'] + ' Word(s)</div>';
+                    }
+                    else {
+                        htmlStr += '<div part="extracted-text-chip">0 Word(s)</div>';
+                    }
                     htmlStr += this.documentParsed.length > 0 ? (this.documentParsed == "yes" ? ('<div part="extracted-text-chip-parsed" class="d-flex align-center"><span>Document Check Successful</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">verified</span></div>') : ('<div part="extracted-text-chip-failed" class="d-flex align-center"><span>Document Check Failed</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">release_alert</span></div>')) : "";
                     htmlStr += '</div>';
                     if (this.documentParsed) {
@@ -288,7 +323,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                         htmlStr += '<div part="matches-title">Possible Matches</div>';
                         htmlStr += '<div part="extracted-meta" class="d-flex align-center w-100">';
                         for (var j = 0; j < this.possibleMatches.length; j++) {
-                            htmlStr += ('<div part="matches" class="mr-5">' + this.possibleMatches[j] + '</div>');
+                            htmlStr += ('<div part="matches" class="mr-10">' + this.possibleMatches[j] + '</div>');
                         }
                         htmlStr += '</div>';
                         htmlStr += '</div>';
@@ -304,8 +339,8 @@ let SfIUploader = class SfIUploader extends LitElement {
                     const fileName = this.inputArr[i]['file'].name;
                     const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
                     htmlStr += '<div class="mr-10"><sf-i-elastic-text text="' + fileName + '" minLength="20"></sf-i-elastic-text></div>';
-                    htmlStr += '<div class="d-flex align-center">';
-                    htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analyzing</div><div class="mr-10 mt-10 analyzing-loader"></div>';
+                    htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
+                    htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analyzing</div><div class="mr-10 analyzing-loader"></div>';
                     htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">' + this.docType + '</div>');
                     htmlStr += '<div part="ext-badge" class="ext-badge mr-10">' + ext + '</div>';
                     htmlStr += '</div>';
@@ -314,7 +349,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                     const fileName = this.inputArr[i]['file'].name;
                     const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
                     htmlStr += '<div class="mr-10"><sf-i-elastic-text text="' + fileName + '" minLength="20"></sf-i-elastic-text></div>';
-                    htmlStr += '<div class="d-flex align-center">';
+                    htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
                     htmlStr += '<div class="progress-number mr-10 upload-status" part="upload-status"></div>';
                     htmlStr += '<div class="mr-10 upload-status" part="upload-status">Upload Complete</div>';
                     htmlStr += '<div part="ext-badge" class="ext-badge mr-10">' + ext + '</div>';
@@ -326,7 +361,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                     const fileName = this.inputArr[i]['file'].name;
                     const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
                     htmlStr += '<div class="mr-10"><sf-i-elastic-text text="' + fileName + '" minLength="20"></sf-i-elastic-text></div>';
-                    htmlStr += '<div class="d-flex align-center">';
+                    htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
                     htmlStr += '<div class="progress-number mr-10 upload-status" part="upload-status"></div>';
                     htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">' + this.docType + '</div>');
                     htmlStr += '<div part="ext-badge" class="ext-badge mr-10">' + ext + '</div>';
@@ -343,7 +378,15 @@ let SfIUploader = class SfIUploader extends LitElement {
                     htmlStr += '<div class="progress-bar progress-bar-right" id="progress-bar-right-' + i + '"></div>';
                     htmlStr += '</div>';
                 }
+                if (this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null)) {
+                    htmlStr += '<div id="message-container" class="hide" part="message-container"></div>';
+                }
                 htmlStr += '</div>';
+                if (this.docType.length > 2) {
+                    if (this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null)) {
+                        Api.getMessageByDocType(this.docType, this.apiId, this._SfLoader, this.renderMessageData, this.setError);
+                    }
+                }
             }
             if (!this.readOnly && this.inputArr.length < parseInt(this.max)) {
                 htmlStr += '<button id="button-add" part="button" class="mt-10">' + this.newButtonText + '</button>';
@@ -373,7 +416,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                         }, 3000);
                         return;
                     }
-                    if (!this.getAllowedExtensions().includes(ext)) {
+                    if (!this.getAllowedExtensions().includes(ext.toLowerCase())) {
                         this.setError('This file extension is not allowed');
                         setTimeout(() => {
                             this.clearMessages();
@@ -408,8 +451,8 @@ let SfIUploader = class SfIUploader extends LitElement {
             }
         };
         this.initListeners = () => {
-            Util.listenForChange(this.inputArr, this.processChangeInput);
-            Util.listenForChange(this.uploadProgress, this.processChangeUploadProgress);
+            this.inputArrInterval = Util.listenForChange(this.inputArr, this.processChangeInput);
+            this.uploadProgressInterval = Util.listenForChange(this.uploadProgress, this.processChangeUploadProgress);
         };
         this.prepopulateInputs = () => {
             const arr = JSON.parse(this.prepopulatedInputArr);
@@ -450,6 +493,15 @@ let SfIUploader = class SfIUploader extends LitElement {
     }
     connectedCallback() {
         super.connectedCallback();
+    }
+    disconnectedCallback() {
+        if (this.inputArrInterval != null) {
+            clearInterval(this.inputArrInterval);
+        }
+        if (this.uploadProgressInterval != null) {
+            clearInterval(this.uploadProgressInterval);
+        }
+        super.disconnectedCallback();
     }
     render() {
         return html `
@@ -503,6 +555,13 @@ SfIUploader.styles = css `
 
     .invisible {
       visibility: hidden
+    }
+
+    #message-container {
+      left: 0px;
+      top: 0px;
+      overflow-y: auto;
+      z-index: 97;
     }
 
     #detail-container {
@@ -805,7 +864,7 @@ SfIUploader.styles = css `
       }
 
     }
-    
+
     .analyzing-loader {
       width: 20px;
       aspect-ratio: 4;
@@ -889,6 +948,9 @@ __decorate([
 __decorate([
     query('#detail-container')
 ], SfIUploader.prototype, "_SfDetailContainer", void 0);
+__decorate([
+    query('#message-container')
+], SfIUploader.prototype, "_SfMessageContainer", void 0);
 __decorate([
     query('#button-add')
 ], SfIUploader.prototype, "_SfButtonAdd", void 0);

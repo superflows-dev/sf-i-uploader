@@ -577,7 +577,7 @@ export class SfIUploader extends LitElement {
 
     if(verify.length > 0){
       html += '<div class="d-flex">';
-      html += '<div part="sf-upload-submessage">Document must contain following words</div>';
+      html += '<div part="sf-upload-submessage">It must contain following words</div>';
       html += '</div>';
       html += '<div class="d-flex">';
       verify.forEach(verifyWord => {
@@ -867,8 +867,10 @@ export class SfIUploader extends LitElement {
           htmlStr += '<div id="message-container" class="hide" part="message-container"></div>'
         }
       htmlStr += '</div>';
-      if(this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null)){
-        Api.getMessageByDocType(this.docType,this.apiId, this._SfLoader, this.renderMessageData, this.setError);
+      if(this.docType.length > 2) {
+        if(this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null)){
+          Api.getMessageByDocType(this.docType,this.apiId, this._SfLoader, this.renderMessageData, this.setError);
+        }
       }
     }
 

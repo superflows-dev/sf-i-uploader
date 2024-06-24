@@ -15,7 +15,7 @@ const truncate = (str, n, useWordBoundary) => {
 };
 const listenForChange = (_var, cb) => {
     var prevValue = JSON.stringify(_var);
-    setInterval(() => {
+    return setInterval(() => {
         if (JSON.stringify(_var) != prevValue) {
             prevValue = JSON.stringify(_var);
             cb();

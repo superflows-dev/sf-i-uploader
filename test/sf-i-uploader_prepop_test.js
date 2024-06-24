@@ -28,6 +28,11 @@ const htmlContent4 = html `
     <sf-i-uploader max="10" apiId="1peg5170d3" allowedExtensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;]" extract="yes" dataPassthrough="test123" callbackUrlHost="webhook.site" callbackUrlPath="d2f50e9d-8d27-47db-b457-b6691c3477e5" prepopulatedInputArr="[{&quot;ext&quot;:&quot;pdf&quot;,&quot;file&quot;:{&quot;name&quot;: &quot;abc&quot;, &quot;ext&quot;: &quot;pdf&quot;}}]"></sf-i-uploader></sf-i-uploader>
 
         `;
+const htmlContent5 = html `
+
+    <sf-i-uploader max="10" apiId="1peg5170d3" allowedExtensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;]" extract="yes" dataPassthrough="test123" callbackUrlHost="webhook.site" callbackUrlPath="d2f50e9d-8d27-47db-b457-b6691c3477e5" prepopulatedInputArr="[{&quot;key&quot;:&quot;321acc3f-d7ef-4422-8c88-e5e2bb995198&quot;,&quot;file&quot;:{&quot;name&quot;: &quot;abc&quot;, &quot;ext&quot;: &quot;pdf&quot;}}]"></sf-i-uploader></sf-i-uploader>
+
+        `;
 // var clickEvent = new MouseEvent("click", {
 //   "view": window,
 //   "bubbles": true,
@@ -126,12 +131,16 @@ suite('sf-i-uploader > basics', () => {
     });
     test('clear uploads', async () => {
         // basic button load
-        const el = (await fixture(htmlContent3));
+        const el = (await fixture(htmlContent5));
         await el.updateComplete;
         await new Promise((r) => setTimeout(r, TIMEOUT_2000));
         el.clearUploads();
         el.populateInputs();
         assert.equal(el.selectedValues().length, 0);
+    });
+    test('input render 5', async () => {
+        const el = (await fixture(htmlContent5));
+        await el.updateComplete;
     });
 });
 //# sourceMappingURL=sf-i-uploader_prepop_test.js.map

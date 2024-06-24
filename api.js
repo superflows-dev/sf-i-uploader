@@ -38,6 +38,22 @@ const uploadMeta = async (key, ext, numblocks, apiId, _SfLoader, callbackError, 
         callbackError(jsonRespose.error);
     }
 };
+const getMessageByDocType = async (docType, apiId, _SfLoader, callbackSuccess, callbackError) => {
+    let url = "https://" + apiId + ".execute-api.us-east-1.amazonaws.com/test/getmessage";
+    const body = { "docType": docType };
+    const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
+    const xhr = (await prepareXhr(body, url, _SfLoader, authorization));
+    _SfLoader.innerHTML = '';
+    if (xhr.status == 200) {
+        const jsonRespose = JSON.parse(xhr.responseText);
+        callbackSuccess(jsonRespose.message, jsonRespose.verify);
+        return;
+    }
+    else {
+        const jsonRespose = JSON.parse(xhr.responseText);
+        callbackError(jsonRespose.error);
+    }
+};
 const getExtractStatus = async (jobid, apiId, _SfLoader, callbackError, projectId) => {
     let url = "https://" + apiId + ".execute-api.us-east-1.amazonaws.com/test/getextractstatus";
     const body = { "jobid": jobid };
@@ -97,7 +113,7 @@ const getKeyData = async (key, apiId, _SfLoader, callbackSuccess, callbackError,
     }
 };
 const exportFunctions = {
-    uploadBlock, uploadMeta, getExtractStatus, getExtract, getKeyData, prepareXhr
+    uploadBlock, uploadMeta, getExtractStatus, getExtract, getKeyData, prepareXhr, getMessageByDocType
 };
 export default exportFunctions;
 //# sourceMappingURL=api.js.map

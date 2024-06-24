@@ -52,6 +52,8 @@ export declare class SfIUploader extends LitElement {
         jobId?: undefined;
     })[];
     inputArr: any[];
+    inputArrInterval: any;
+    uploadProgressInterval: any;
     uploadProgress: any;
     uploadProgressReceiver: any;
     current: number;
@@ -68,11 +70,13 @@ export declare class SfIUploader extends LitElement {
     _SfLoader: any;
     _SfUploadContainer: any;
     _SfDetailContainer: any;
+    _SfMessageContainer: any;
     _SfButtonAdd: any;
     clearMessages: () => void;
     setError: (msg: string) => void;
     setSuccess: (msg: string) => void;
     uploadProgressUpdater: (element: HTMLElement | null, value: string) => void;
+    renderMessageData: (message: string, verify: [string]) => void;
     renderKeyData: (ext: string, data: string) => void;
     chunkify: (base64String: string) => RegExpMatchArray | null;
     executeExtract: (jobId: string) => Promise<void>;
@@ -89,6 +93,7 @@ export declare class SfIUploader extends LitElement {
     constructor();
     protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void;
     connectedCallback(): void;
+    disconnectedCallback(): void;
     render(): import("lit-html").TemplateResult<1>;
 }
 declare global {

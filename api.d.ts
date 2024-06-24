@@ -5,6 +5,7 @@ declare const exportFunctions: {
     getExtract: (key: string, fileIndex: string, dataPassthrough: any, apiId: string, _SfLoader: any, callbackError: any, callbackUrlHost: string, callbackUrlPath: string, docType: string, projectId: string) => Promise<any>;
     getKeyData: (key: string, apiId: string, _SfLoader: any, callbackSuccess: any, callbackError: any, projectId: string) => Promise<void>;
     prepareXhr: (data: any, url: string, loaderElement: any, authorization: any) => Promise<unknown>;
+    getMessageByDocType: (docType: string, apiId: string, _SfLoader: any, callbackSuccess: any, callbackError: any) => Promise<void>;
 };
 export default exportFunctions;
 //# sourceMappingURL=api.d.ts.map
