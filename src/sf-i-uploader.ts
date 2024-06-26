@@ -149,6 +149,7 @@ export class SfIUploader extends LitElement {
   arrWordsMeta: any = {};
   documentParsed: string = "";
   possibleMatches: Array<string> = [];
+  matchArr: Array<string> = [];
 
   @property()
   flow: string = "";
@@ -565,7 +566,7 @@ export class SfIUploader extends LitElement {
 
   }
   
-  renderMessageData = (message: string, verify: [string]) => {
+  renderMessageData = (message: string, verify: [string], match: [string]) => {
 
     (this._SfMessageContainer as HTMLDivElement).style.display = 'block';
 
@@ -588,7 +589,7 @@ export class SfIUploader extends LitElement {
 
 
     (this._SfMessageContainer as HTMLDivElement).innerHTML = html;
-
+    this.matchArr = match
   }
 
   renderKeyData = (ext: string, data: string) => {
@@ -802,7 +803,7 @@ export class SfIUploader extends LitElement {
             }
             htmlStr += this.documentParsed.length > 0 ? ( this.documentParsed == "yes" ? ('<div part="extracted-text-chip-parsed" class="d-flex align-center"><span>Document Check Successful</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">verified</span></div>') : ('<div part="extracted-text-chip-failed" class="d-flex align-center"><span>Document Check Failed</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">release_alert</span></div>')) : "";
           htmlStr += '</div>'; 
-          if(this.documentParsed) {
+          if(this.documentParsed && this.matchArr.length > 0 && this.possibleMatches.length > 0) {
             htmlStr += '<div class="mt-20 w-100">';
               htmlStr += '<div part="matches-title">Possible Matches</div>';
               htmlStr += '<div part="extracted-meta" class="d-flex align-center w-100">';

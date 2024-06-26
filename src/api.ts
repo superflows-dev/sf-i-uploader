@@ -66,7 +66,7 @@ const getMessageByDocType = async (docType: string, apiId: string, _SfLoader: an
   if(xhr.status == 200) {
 
     const jsonRespose = JSON.parse(xhr.responseText);
-    callbackSuccess(jsonRespose.message, jsonRespose.verify);
+    callbackSuccess(jsonRespose.message, jsonRespose.verify, jsonRespose.match);
     return;
     
   } else {
