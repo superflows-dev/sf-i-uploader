@@ -147,9 +147,9 @@ export class SfIUploader extends LitElement {
 
   arrWords: any = [];
   arrWordsMeta: any = {};
-  documentParsed: string = "";
-  possibleMatches: Array<string> = [];
-  matchArr: Array<string> = [];
+  documentParsed: Array<string> = [""];
+  possibleMatches: Array<Array<string>> = [[]];
+  matchArr: Array<Array<string>> = [[]];
 
   @property()
   flow: string = "";
@@ -589,7 +589,7 @@ export class SfIUploader extends LitElement {
 
 
     (this._SfMessageContainer as HTMLDivElement).innerHTML = html;
-    this.matchArr = match
+    this.matchArr[0] = match
   }
 
   renderKeyData = (ext: string, data: string) => {
@@ -659,20 +659,27 @@ export class SfIUploader extends LitElement {
     do {
 
       resultExtractStatus = await Api.getExtractStatus(jobId, this.apiId, this._SfLoader, this.setError, this.projectId);
-
+      console.log(resultExtractStatus)
       await Util.sleep(5000);
 
     } while (resultExtractStatus != null && resultExtractStatus.status == "IN_PROGRESS");
 
     if(resultExtractStatus != null && resultExtractStatus.status == "SUCCEEDED") {
+      let index = 0
+      for (let i = 0; i < this.inputArr.length; i++) {
+        if(this.inputArr[i]['jobId'] == jobId){
+          index = i;
+          break;
+        }
+      }
       this.arrWords = [];
       this.arrWordsMeta = {};
-      this.documentParsed = "";
+      this.documentParsed[index] = "";
 
       this.arrWords = JSON.parse(resultExtractStatus.arrWords.S);
       this.arrWordsMeta = JSON.parse(resultExtractStatus.arrWordsMeta.S);
-      this.documentParsed = this.docType == "" ? "" : resultExtractStatus.documentParsed ? "yes" : "no";
-      this.possibleMatches = this.docType == "" ? [] : resultExtractStatus.documentParsed ? resultExtractStatus.possibleMatches : [];
+      this.documentParsed[index] = this.docType == "" ? "" : resultExtractStatus.documentParsed ? "yes" : "no";
+      this.possibleMatches[index] = this.docType == "" ? [] : resultExtractStatus.documentParsed ? resultExtractStatus.possibleMatches : [];
 
     }
 
@@ -681,7 +688,7 @@ export class SfIUploader extends LitElement {
   processExtract = async (key: string, fileIndex: string) => {
 
     // this.extractState.state = 1;
-    const resultExtract = await Api.getExtract(key, fileIndex, this.dataPassthrough, this.apiId, this._SfLoader, this.setError, this.callbackUrlHost, this.callbackUrlPath, this.docType, this.projectId);
+    const resultExtract = await Api.getExtract(key, fileIndex, this.dataPassthrough, this.apiId, this._SfLoader, this.setError, this.callbackUrlHost, this.callbackUrlPath, parseInt(fileIndex) == 0 ? this.docType : "", this.projectId);
 
     const jobId = resultExtract.jobId;
     return jobId;
@@ -691,9 +698,16 @@ export class SfIUploader extends LitElement {
   executeAndUpdateExtract = async (jobId: string, fileIndex: number) => {
 
     await this.executeExtract(jobId);
+    let index = 0
+      for (let i = 0; i < this.inputArr.length; i++) {
+        if(this.inputArr[i]['jobId'] == jobId){
+          index = i;
+          break;
+        }
+      }
     this.inputArr[fileIndex]["arrWords"] = this.arrWords;
     this.inputArr[fileIndex]["arrWordsMeta"] = this.arrWordsMeta;
-    this.inputArr[fileIndex]["documentParsed"] = this.documentParsed;
+    this.inputArr[fileIndex]["documentParsed"] = this.documentParsed[index];
     const event2 = new CustomEvent('analysisCompleted', {detail: {meta: this.arrWordsMeta, words: this.arrWords}, bubbles: true, composed: true});
     this.dispatchEvent(event2);
     
@@ -767,7 +781,7 @@ export class SfIUploader extends LitElement {
 
           htmlStr += '<input id="file-'+i+'" type="file" />';
           htmlStr += '<div class="d-flex align-center justify-between flex-wrap" part="upload-buttons-container">';
-          htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>')
+          htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>')
           htmlStr += '<button id="button-delete-'+i+'" part="button-icon"><span class="material-icons">delete</span></button>';
           htmlStr += '</div>';
 
@@ -780,7 +794,7 @@ export class SfIUploader extends LitElement {
             htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
               htmlStr += '<button id="button-delete-'+i+'" class="mr-10" part=""><span class="material-icons">delete</span></button>';
               htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analysis Complete</div>';
-              htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
+              htmlStr += (this.docType == "" || i > 0? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
               htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
               htmlStr += '<button id="button-open-'+i+'" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
             htmlStr += '</div>';
@@ -801,14 +815,14 @@ export class SfIUploader extends LitElement {
             }else{
               htmlStr += '<div part="extracted-text-chip">0 Word(s)</div>';
             }
-            htmlStr += this.documentParsed.length > 0 ? ( this.documentParsed == "yes" ? ('<div part="extracted-text-chip-parsed" class="d-flex align-center"><span>Document Check Successful</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">verified</span></div>') : ('<div part="extracted-text-chip-failed" class="d-flex align-center"><span>Document Check Failed</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">release_alert</span></div>')) : "";
+            htmlStr += i == 0 ? this.documentParsed[i].length > 0 ? ( this.documentParsed[i] == "yes" ? ('<div part="extracted-text-chip-parsed" class="d-flex align-center"><span>Document Check Successful</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">verified</span></div>') : ('<div part="extracted-text-chip-failed" class="d-flex align-center"><span>Document Check Failed</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">release_alert</span></div>')) : "" : "";
           htmlStr += '</div>'; 
-          if(this.documentParsed && this.matchArr.length > 0 && this.possibleMatches.length > 0) {
+          if(this.documentParsed[i] && this.matchArr[0].length > 0 && this.possibleMatches[i].length > 0) {
             htmlStr += '<div class="mt-20 w-100">';
               htmlStr += '<div part="matches-title">Possible Matches</div>';
               htmlStr += '<div part="extracted-meta" class="d-flex align-center w-100">';
-                for(var j = 0; j < this.possibleMatches.length; j++) {
-                  htmlStr += ('<div part="matches" class="mr-10">'+this.possibleMatches[j]+'</div>');
+                for(var j = 0; j < this.possibleMatches[i].length; j++) {
+                  htmlStr += ('<div part="matches" class="mr-10">'+this.possibleMatches[i][j]+'</div>');
                 }
               htmlStr += '</div>';
             htmlStr += '</div>';
@@ -827,7 +841,7 @@ export class SfIUploader extends LitElement {
           htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
           htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
           htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analyzing</div><div class="mr-10 analyzing-loader"></div>';
-          htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
+          htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
           htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
           htmlStr += '</div>';
 
@@ -839,7 +853,7 @@ export class SfIUploader extends LitElement {
           htmlStr += '<div class="progress-number mr-10 upload-status" part="upload-status"></div>';
           htmlStr += '<div class="mr-10 upload-status" part="upload-status">Upload Complete</div>';
           htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
-          htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
+          htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
           htmlStr += '<button id="button-open-'+i+'" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
           htmlStr += '</div>';
         }else {
@@ -848,7 +862,7 @@ export class SfIUploader extends LitElement {
           htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
           htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
           htmlStr += '<div class="progress-number mr-10 upload-status" part="upload-status"></div>';
-          htmlStr += (this.docType == "" ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
+          htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
           htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
           if(this.inputArr[i]["progress"] == null || !this.inputArr[i]["progress"]) {
             htmlStr += '<button id="button-cancel-'+i+'" part="button-icon" class="mr-10"><span class="material-icons">close</span></button>';
@@ -868,7 +882,7 @@ export class SfIUploader extends LitElement {
           htmlStr += '<div id="message-container" class="hide" part="message-container"></div>'
         }
       htmlStr += '</div>';
-      if(this.docType.length > 2) {
+      if(this.docType.length > 2 && i == 0) {
         if(this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null)){
           Api.getMessageByDocType(this.docType,this.apiId, this._SfLoader, this.renderMessageData, this.setError);
         }
