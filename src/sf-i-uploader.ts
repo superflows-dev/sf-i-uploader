@@ -135,6 +135,43 @@ export class SfIUploader extends LitElement {
     return values;
   }
 
+  selectedTexts = () => {
+    const values = [];
+
+    for(var i = 0; i < this.inputArr.length; i++) {
+      if(this.inputArr[i]['key'] != null) {
+
+        if(this.inputArr[i]['arrWords'] != null) {
+          values.push(JSON.stringify({
+            arrWords: this.inputArr[i]['arrWords'],
+            arrWordsMeta: this.inputArr[i]['arrWordsMeta'],
+            jobId: this.inputArr[i]['jobId'],
+            key: this.inputArr[i]['key'],
+            ext: this.inputArr[i]['ext']
+          }))
+        } else if(this.inputArr[i]['jobId'] != null) {
+          values.push(JSON.stringify({
+            jobId: this.inputArr[i]['jobId'],
+            key: this.inputArr[i]['key'],
+            ext: this.inputArr[i]['ext']
+          }))
+        } else if(this.inputArr[i]['ext'] != null) {
+          values.push(JSON.stringify({
+            key: this.inputArr[i]['key'],
+            ext: this.inputArr[i]['ext']
+          }))
+        } else {
+          values.push(JSON.stringify({
+            key: this.inputArr[i]['key'],
+            ext: this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1]
+          }))
+        }
+      }
+    }
+
+    return values;
+  }
+
   inputArr: any[] = [];
 
   inputArrInterval: any = null;
@@ -150,6 +187,8 @@ export class SfIUploader extends LitElement {
   documentParsed: Array<string> = [""];
   possibleMatches: Array<Array<string>> = [[]];
   matchArr: Array<Array<string>> = [[]];
+
+  uploadValid = false
 
   @property()
   flow: string = "";
@@ -710,7 +749,7 @@ export class SfIUploader extends LitElement {
     this.inputArr[fileIndex]["documentParsed"] = this.documentParsed[index];
     const event2 = new CustomEvent('analysisCompleted', {detail: {meta: this.arrWordsMeta, words: this.arrWords}, bubbles: true, composed: true});
     this.dispatchEvent(event2);
-    
+    this.isUploadValid()
   }
 
   beginUploadJob = (fileIndex: any, file: any) => {
@@ -757,6 +796,8 @@ export class SfIUploader extends LitElement {
           this.executeAndUpdateExtract(jobId, fileIndex);
 
         }
+
+        this.isUploadValid()
 
       }
       run();
@@ -901,7 +942,7 @@ export class SfIUploader extends LitElement {
         this.current++;
         this.inputArr.push({})
       }
-      
+      this.isUploadValid()
     });
 
     for(i = 0; i < this.inputArr.length; i++) {
@@ -909,6 +950,7 @@ export class SfIUploader extends LitElement {
       (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-'+i)?.addEventListener('click', (ev: any) => {
         const index = ev.currentTarget.id.split("-")[2];
         this.inputArr.splice(index, 1)
+        this.isUploadValid()
       });
 
       (this._SfUploadContainer as HTMLDivElement).querySelector('#file-'+i)?.addEventListener('change', (ev: any) => {
@@ -1013,6 +1055,28 @@ export class SfIUploader extends LitElement {
     this.populateInputs();
     this.initListeners();
 
+  }
+
+  isUploadValid = async () => {
+    for(var j = 0; j < this.inputArr.length; j++) {
+      if(this.inputArr[j].file == null) {
+        this.uploadValid = false
+        break
+      } else if (this.inputArr[j]["arrWords"] != null) {
+        this.uploadValid = true
+      } else if (this.inputArr[j]["jobId"] != null) {
+        this.uploadValid = !(this.extract.toLowerCase() == "yes")
+        break;
+      } else if (this.inputArr[j]["key"] != null) {
+        this.uploadValid = !(this.extract.toLowerCase() == "yes")
+        break;
+      }else {
+        this.uploadValid = false;
+        break;
+      }
+  }
+    const event = new CustomEvent('uploadValid', {detail: {uploadValid: this.uploadValid}, bubbles: true, composed: true});
+    this.dispatchEvent(event);
   }
 
   constructor() {
