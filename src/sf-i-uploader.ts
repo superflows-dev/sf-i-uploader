@@ -37,8 +37,12 @@ DB: partitionKey, rangeKey, values
 export class SfIUploader extends LitElement {
   
   @property()
+  // prepopulatedInputArr: string = "[{\"key\":\"2c39a366-1532-49a1-891e-bdcca8d5d215\",\"ext\": \"jpg\"},{\"key\": \"730e310f-5ae6-4641-a2af-eae3a535b6e9\",\"ext\": \"jpg\"}]";
   prepopulatedInputArr: string = "[]";
 
+  
+  @property()
+  mode: string = "edit";
 
   @property()
   readOnly: boolean = false;
@@ -633,54 +637,64 @@ export class SfIUploader extends LitElement {
 
   renderKeyData = (ext: string, data: string) => {
 
-    (this._SfDetailContainer as HTMLDivElement).style.display = 'block';
-
     var html = '';
 
-    html += '<div class="d-flex justify-between m-10">';
-    html += '<button class="invisible" part="button-icon"><span class="material-icons">close</span></button>'
-    html += '<button id="button-detail-cancel" part="button-icon"><span class="material-icons">close</span></button>'
-    html += '</div>';
+    if(this.mode == "view"){
+      if(ext == "png" || ext == "jpg") {
 
-    if(ext == "png" || ext == "jpg") {
+        html += '<div class="d-flex justify-center" part="image-container">';
+        html += '<img src="'+data+'" alt="picture" part="image-component"/>'
+        html += '</div>';
+        (this._SfUploadContainer as HTMLDivElement).innerHTML = html;
 
-      
-      html += '<div class="d-flex justify-center">';
-      html += '<img src="'+data+'" alt="picture" />'
+      }
+    }else{
+      (this._SfDetailContainer as HTMLDivElement).style.display = 'block';
+      html += '<div class="d-flex justify-between m-10">';
+      html += '<button class="invisible" part="button-icon"><span class="material-icons">close</span></button>'
+      html += '<button id="button-detail-cancel" part="button-icon"><span class="material-icons">close</span></button>'
       html += '</div>';
 
+      if(ext == "png" || ext == "jpg") {
 
-    } else {
+        
+        html += '<div class="d-flex justify-center">';
+        html += '<img src="'+data+'" alt="picture" />'
+        html += '</div>';
 
-      html += '<div class="d-flex justify-center align-center">';
-      html += '<div part="sf-uploader-download-message">File is ready for download!</div>&nbsp;&nbsp;&nbsp;&nbsp;'
-      html += '<button part="button-icon" id="download-button"><span class="material-icons">cloud_download</span></button>'
-      html += '</div>';
 
+      } else {
+
+        html += '<div class="d-flex justify-center align-center">';
+        html += '<div part="sf-uploader-download-message">File is ready for download!</div>&nbsp;&nbsp;&nbsp;&nbsp;'
+        html += '<button part="button-icon" id="download-button"><span class="material-icons">cloud_download</span></button>'
+        html += '</div>';
+
+      }
+
+      (this._SfDetailContainer as HTMLDivElement).innerHTML = html;
+
+      // console.log('rendering key data', html);
+
+      (this._SfDetailContainer as HTMLDivElement).querySelector('#button-detail-cancel')?.addEventListener('click', () => {
+
+        (this._SfDetailContainer as HTMLDivElement).innerHTML = '';
+        (this._SfDetailContainer as HTMLDivElement).style.display = 'none';
+
+      });
+
+      (this._SfDetailContainer as HTMLDivElement).querySelector('#download-button')?.addEventListener('click', () => {
+
+        const a = document.createElement("a");
+        a.style.display = "none";
+        a.href = data;
+        a.download = "download_"+new Date().getTime()+".pdf";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a); 
+
+      });
     }
-
-    (this._SfDetailContainer as HTMLDivElement).innerHTML = html;
-
-    // console.log('rendering key data', html);
-
-    (this._SfDetailContainer as HTMLDivElement).querySelector('#button-detail-cancel')?.addEventListener('click', () => {
-
-      (this._SfDetailContainer as HTMLDivElement).innerHTML = '';
-      (this._SfDetailContainer as HTMLDivElement).style.display = 'none';
-
-    });
-
-    (this._SfDetailContainer as HTMLDivElement).querySelector('#download-button')?.addEventListener('click', () => {
-
-      const a = document.createElement("a");
-      a.style.display = "none";
-      a.href = data;
-      a.download = "download_"+new Date().getTime()+".pdf";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a); 
-
-    });
 
   }
 
@@ -814,127 +828,163 @@ export class SfIUploader extends LitElement {
   populateInputs = () => {
 
     var htmlStr = '';
-    
-    for(var i = 0; i < this.inputArr.length; i++) {
-      htmlStr += '<div part="input" id="upload-row-'+i+'">';
-        htmlStr += '<div class="d-flex align-center justify-between flex-wrap">';
-        if(this.inputArr[i].file == null) {
+    if(this.mode == "view"){
+      console.log("populating view input", this.inputArr.length)
+      if(this.inputArr.length > 0){
+        Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderKeyData, this.setError, this.projectId)
+      }
+      // for(var i = 0; i < this.inputArr.length; i++){
+      //   if(this.inputArr[i].file == null) {
+      //     //no file
 
-          htmlStr += '<input id="file-'+i+'" type="file" />';
-          htmlStr += '<div class="d-flex align-center justify-between flex-wrap" part="upload-buttons-container">';
-          htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>')
-          htmlStr += '<button id="button-delete-'+i+'" part="button-icon"><span class="material-icons">delete</span></button>';
-          htmlStr += '</div>';
+      //   } else if (this.inputArr[i]["arrWords"] != null) {
 
-        } else if (this.inputArr[i]["arrWords"] != null) {
+      //     // file with analysis complete
 
-          const fileName = this.inputArr[i]['file'].name;
-          const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
-          htmlStr += '<div class="w-100 d-flex align-center justify-between">';
-            htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
-            htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
-              htmlStr += '<button id="button-delete-'+i+'" class="mr-10" part=""><span class="material-icons">delete</span></button>';
-              htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analysis Complete</div>';
-              htmlStr += (this.docType == "" || i > 0? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
-              htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
-              htmlStr += '<button id="button-open-'+i+'" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
+      //   } else if (this.inputArr[i]["jobId"] != null) {
+
+      //     //file with analysis not complete
+
+      //   } else if (this.inputArr[i]["key"] != null) {
+      //     // file with upload complete
+      //   }
+      // }
+    }else{
+      for(var i = 0; i < this.inputArr.length; i++) {
+        htmlStr += '<div part="input" id="upload-row-'+i+'">';
+          htmlStr += '<div class="d-flex align-center justify-between flex-wrap">';
+          if(this.inputArr[i].file == null) {
+
+            htmlStr += '<input id="file-'+i+'" type="file" />';
+            htmlStr += '<div class="d-flex align-center justify-between flex-wrap" part="upload-buttons-container">';
+            htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>')
+            htmlStr += '<button id="button-delete-'+i+'" part="button-icon"><span class="material-icons">delete</span></button>';
             htmlStr += '</div>';
-          htmlStr += '</div>';
-          htmlStr += '<div part="extracted-meta" class="d-flex align-center mt-10 w-100">';
-            if(this.inputArr[i]["arrWordsMeta"]['PAGE'] != null){
-              htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['PAGE'] +' Page(s)</div>';
-            }else{
-              htmlStr += '<div part="extracted-text-chip">0 Page(s)</div>';
-            }
-            if(this.inputArr[i]["arrWordsMeta"]['LINE'] != null){
-              htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['LINE'] +' Line(s)</div>';
-            }else{
-              htmlStr += '<div part="extracted-text-chip">0 Line(s)</div>';
-            }
-            if(this.inputArr[i]["arrWordsMeta"]['WORD'] != null){
-              htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['WORD'] +' Word(s)</div>';
-            }else{
-              htmlStr += '<div part="extracted-text-chip">0 Word(s)</div>';
-            }
-            htmlStr += i == 0 ? this.documentParsed[i].length > 0 ? ( this.documentParsed[i] == "yes" ? ('<div part="extracted-text-chip-parsed" class="d-flex align-center"><span>Document Check Successful</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">verified</span></div>') : ('<div part="extracted-text-chip-failed" class="d-flex align-center"><span>Document Check Failed</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">release_alert</span></div>')) : "" : "";
-          htmlStr += '</div>'; 
-          if(this.documentParsed[i] && this.matchArr[0].length > 0 && this.possibleMatches[i].length > 0) {
-            htmlStr += '<div class="mt-20 w-100">';
-              htmlStr += '<div part="matches-title">Possible Matches</div>';
-              htmlStr += '<div part="extracted-meta" class="d-flex align-center w-100">';
-                for(var j = 0; j < this.possibleMatches[i].length; j++) {
-                  htmlStr += ('<div part="matches" class="mr-10">'+this.possibleMatches[i][j]+'</div>');
+
+          } else if (this.inputArr[i]["arrWords"] != null) {
+
+            const fileName = this.inputArr[i]['file'].name;
+            const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
+            htmlStr += '<div class="w-100 d-flex align-center justify-between">';
+              htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
+              htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
+                // htmlStr += '<button id="button-delete-'+i+'" class="mr-10" part=""><span class="material-icons">delete</span></button>';
+                htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analysis Complete</div>';
+                htmlStr += (this.docType == "" || i > 0? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
+                htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
+                if(this.inputArr[i]["delete"]){
+                  htmlStr += '<button id="button-delete-file-cancel-'+i+'" part="button-icon" class="button-icon"><span class="material-icons">close</span></button>'
+                  htmlStr += '<button id="button-delete-file-confirm-'+i+'" part="button-icon" class="button-icon"><span class="material-icons">delete</span><span class="material-icons">done</span></button>'
+                }else{
+                  htmlStr += '<button id="button-delete-file-'+i+'" part="button-icon" class="button-icon"><span class="material-icons">delete</span></button>'
+                  htmlStr += '<button id="button-open-'+i+'" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
                 }
               htmlStr += '</div>';
             htmlStr += '</div>';
-          }
-          htmlStr += '<div class="mt-20 w-100">';
-            htmlStr += '<div part="extracted-title">Extracted Text</div>';
-            htmlStr += '<div part="extracted-text" class="d-flex align-center">';
-            htmlStr += '<sf-i-elastic-text text="'+this.inputArr[i]["arrWords"].join(' ')+'" minLength="100"></sf-i-elastic-text>';
+            htmlStr += '<div part="extracted-meta" class="d-flex align-center mt-10 w-100">';
+              if(this.inputArr[i]["arrWordsMeta"]['PAGE'] != null){
+                htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['PAGE'] +' Page(s)</div>';
+              }else{
+                htmlStr += '<div part="extracted-text-chip">0 Page(s)</div>';
+              }
+              if(this.inputArr[i]["arrWordsMeta"]['LINE'] != null){
+                htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['LINE'] +' Line(s)</div>';
+              }else{
+                htmlStr += '<div part="extracted-text-chip">0 Line(s)</div>';
+              }
+              if(this.inputArr[i]["arrWordsMeta"]['WORD'] != null){
+                htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['WORD'] +' Word(s)</div>';
+              }else{
+                htmlStr += '<div part="extracted-text-chip">0 Word(s)</div>';
+              }
+              htmlStr += i == 0 ? this.documentParsed[i].length > 0 ? ( this.documentParsed[i] == "yes" ? ('<div part="extracted-text-chip-parsed" class="d-flex align-center"><span>Document Check Successful</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">verified</span></div>') : ('<div part="extracted-text-chip-failed" class="d-flex align-center"><span>Document Check Failed</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">release_alert</span></div>')) : "" : "";
+            htmlStr += '</div>'; 
+            if(this.documentParsed[i] && this.matchArr[0].length > 0 && this.possibleMatches[i].length > 0) {
+              htmlStr += '<div class="mt-20 w-100">';
+                htmlStr += '<div part="matches-title">Possible Matches</div>';
+                htmlStr += '<div part="extracted-meta" class="d-flex align-center w-100">';
+                  for(var j = 0; j < this.possibleMatches[i].length; j++) {
+                    htmlStr += ('<div part="matches" class="mr-10">'+this.possibleMatches[i][j]+'</div>');
+                  }
+                htmlStr += '</div>';
+              htmlStr += '</div>';
+            }
+            htmlStr += '<div class="mt-20 w-100">';
+              htmlStr += '<div part="extracted-title">Extracted Text</div>';
+              htmlStr += '<div part="extracted-text" class="d-flex align-center">';
+              htmlStr += '<sf-i-elastic-text text="'+this.inputArr[i]["arrWords"].join(' ')+'" minLength="100"></sf-i-elastic-text>';
+              htmlStr += '</div>';
             htmlStr += '</div>';
-          htmlStr += '</div>';
 
-        } else if (this.inputArr[i]["jobId"] != null) {
+          } else if (this.inputArr[i]["jobId"] != null) {
 
-          const fileName = this.inputArr[i]['file'].name;
-          const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
-          htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
-          htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
-          htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analyzing</div><div class="mr-10 analyzing-loader"></div>';
-          htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
-          htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
-          htmlStr += '</div>';
+            const fileName = this.inputArr[i]['file'].name;
+            const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
+            htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
+            htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
+            htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analyzing</div><div class="mr-10 analyzing-loader"></div>';
+            htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
+            htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
+            htmlStr += '</div>';
 
-        } else if (this.inputArr[i]["key"] != null) {
-          const fileName = this.inputArr[i]['file'].name;
-          const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
-          htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
-          htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
-          htmlStr += '<div class="progress-number mr-10 upload-status" part="upload-status"></div>';
-          htmlStr += '<div class="mr-10 upload-status" part="upload-status">Upload Complete</div>';
-          htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
-          htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
-          htmlStr += '<button id="button-open-'+i+'" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
-          htmlStr += '</div>';
-        }else {
-          const fileName = this.inputArr[i]['file'].name;
-          const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
-          htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
-          htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
-          htmlStr += '<div class="progress-number mr-10 upload-status" part="upload-status"></div>';
-          htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
-          htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
-          if(this.inputArr[i]["progress"] == null || !this.inputArr[i]["progress"]) {
-            htmlStr += '<button id="button-cancel-'+i+'" part="button-icon" class="mr-10"><span class="material-icons">close</span></button>';
-            htmlStr += '<button id="button-upload-'+i+'" part="button-icon" class="d-flex align-center"><h3 class="m-5">Upload</h3> <span class="material-icons">upload</span></button>';
+          } else if (this.inputArr[i]["key"] != null) {
+            const fileName = this.inputArr[i]['file'].name;
+            const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
+            htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
+            htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
+            htmlStr += '<div class="progress-number mr-10 upload-status" part="upload-status"></div>';
+            htmlStr += '<div class="mr-10 upload-status" part="upload-status">Upload Complete</div>';
+            htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
+            htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
+            if(this.inputArr[i]["delete"]){
+              htmlStr += '<button id="button-delete-file-cancel-'+i+'" part="button-icon" class="mr-10 button-icon"><span class="material-icons">close</span></button>'
+              htmlStr += '<button id="button-delete-file-confirm-'+i+'" part="button-icon" class="button-icon"><span class="material-icons">delete</span><span class="material-icons">done</span></button>'
+            }else{
+              if(this.extract.toLowerCase() != "yes"){
+                htmlStr += '<button id="button-delete-file-'+i+'" part="button-icon" class="mr-10 button-icon"><span class="material-icons">delete</span></button>'
+                
+              }
+              htmlStr += '<button id="button-open-'+i+'" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
+            }
+            htmlStr += '</div>';
+          }else {
+            const fileName = this.inputArr[i]['file'].name;
+            const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
+            htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
+            htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
+            htmlStr += '<div class="progress-number mr-10 upload-status" part="upload-status"></div>';
+            htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
+            htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
+            if(this.inputArr[i]["progress"] == null || !this.inputArr[i]["progress"]) {
+              htmlStr += '<button id="button-cancel-'+i+'" part="button-icon" class="mr-10"><span class="material-icons">close</span></button>';
+              htmlStr += '<button id="button-upload-'+i+'" part="button-icon" class="d-flex align-center"><h3 class="m-5">Upload</h3> <span class="material-icons">upload</span></button>';
+            }
+            htmlStr += '</div>';
           }
           htmlStr += '</div>';
-        }
-        htmlStr += '</div>';
-        if(this.inputArr[i]["progress"]) {
-          htmlStr += '<div class="d-flex">'
-          htmlStr += '<div class="progress-bar progress-bar-left" id="progress-bar-left-'+i+'"></div>'
-          htmlStr += '<div class="progress-bar progress-bar-right" id="progress-bar-right-'+i+'"></div>'
-          htmlStr += '</div>'
-        }
+          if(this.inputArr[i]["progress"]) {
+            htmlStr += '<div class="d-flex">'
+            htmlStr += '<div class="progress-bar progress-bar-left" id="progress-bar-left-'+i+'"></div>'
+            htmlStr += '<div class="progress-bar progress-bar-right" id="progress-bar-right-'+i+'"></div>'
+            htmlStr += '</div>'
+          }
 
-        if(this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null)){
-          htmlStr += '<div id="message-container" class="hide" part="message-container"></div>'
-        }
-      htmlStr += '</div>';
-      if(this.docType.length > 2 && i == 0) {
-        if(this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null)){
-          Api.getMessageByDocType(this.docType,this.apiId, this._SfLoader, this.renderMessageData, this.setError);
+          if(this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null)){
+            htmlStr += '<div id="message-container" class="hide" part="message-container"></div>'
+          }
+        htmlStr += '</div>';
+        if(this.docType.length > 2 && i == 0) {
+          if(this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null)){
+            Api.getMessageByDocType(this.docType,this.apiId, this._SfLoader, this.renderMessageData, this.setError);
+          }
         }
       }
     }
 
-    if(!this.readOnly && this.inputArr.length < parseInt(this.max)) {
+    if(!this.readOnly && this.inputArr.length < parseInt(this.max) && this.mode != "view") {
       htmlStr += '<button id="button-add" part="button" class="mt-10">'+this.newButtonText+'</button>';
     }
     
-
     (this._SfUploadContainer as HTMLDivElement).innerHTML = htmlStr;
 
     (this._SfUploadContainer as HTMLDivElement).querySelector('#button-add')?.addEventListener('click', () => {
@@ -975,6 +1025,22 @@ export class SfIUploader extends LitElement {
           }, 3000);
           return;
         }
+      });
+      
+      (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-file-'+i)?.addEventListener('click', (ev:any) => {
+        const index = ev.currentTarget.id.split("-")[3];
+        console.log('button clicked', index)
+        this.inputArr[index]['delete'] = true
+      });
+      (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-file-cancel-'+i)?.addEventListener('click', (ev:any) => {
+        const index = ev.currentTarget.id.split("-")[4];
+        this.inputArr[index]['delete'] = false
+      });
+      (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-file-confirm-'+i)?.addEventListener('click', (ev:any) => {
+        const index = ev.currentTarget.id.split("-")[4];
+        console.log("confirming delete", index, this.inputArr[index])
+        this.inputArr.splice(index, 1)
+        this.isUploadValid()
       });
 
       (this._SfUploadContainer as HTMLDivElement).querySelector('#button-cancel-'+i)?.addEventListener('click', (ev: any) => {
@@ -1047,6 +1113,10 @@ export class SfIUploader extends LitElement {
       }
     }
 
+    if(this.mode == "view"){
+      console.log("uploader view mode")
+    }
+
   }
 
   loadMode = async () => {
@@ -1054,27 +1124,39 @@ export class SfIUploader extends LitElement {
     this.prepopulateInputs();
     this.populateInputs();
     this.initListeners();
-
+    this.isUploadValid();
   }
 
   isUploadValid = async () => {
-    for(var j = 0; j < this.inputArr.length; j++) {
-      if(this.inputArr[j].file == null) {
-        this.uploadValid = false
-        break
-      } else if (this.inputArr[j]["arrWords"] != null) {
-        this.uploadValid = true
-      } else if (this.inputArr[j]["jobId"] != null) {
-        this.uploadValid = !(this.extract.toLowerCase() == "yes")
-        break;
-      } else if (this.inputArr[j]["key"] != null) {
-        this.uploadValid = !(this.extract.toLowerCase() == "yes")
-        break;
-      }else {
-        this.uploadValid = false;
-        break;
+    let flag = true
+    if(this.inputArr.length === 0){
+      flag = false
+    }else{
+      for(var j = 0; j < this.inputArr.length; j++) {
+        if(this.inputArr[j].file == null) {
+          flag = false
+          break
+        } else if (this.inputArr[j]["arrWords"] != null) {
+
+        } else if (this.inputArr[j]["jobId"] != null) {
+          if(this.extract.toLowerCase() == "yes"){
+            flag = false;
+            break
+          }
+        } else if (this.inputArr[j]["key"] != null) {
+          if(this.extract.toLowerCase() == "yes"){
+            flag = false;
+            break;
+          }
+          
+        }else {
+          flag = false
+          break;
+        }
       }
-  }
+    }
+    console.log("isUploadVaid called", flag, this.inputArr);
+    this.uploadValid = flag
     const event = new CustomEvent('uploadValid', {detail: {uploadValid: this.uploadValid}, bubbles: true, composed: true});
     this.dispatchEvent(event);
   }
