@@ -38,11 +38,15 @@ export class SfIUploader extends LitElement {
   
   @property()
   // prepopulatedInputArr: string = "[{\"key\":\"2c39a366-1532-49a1-891e-bdcca8d5d215\",\"ext\": \"jpg\"},{\"key\": \"730e310f-5ae6-4641-a2af-eae3a535b6e9\",\"ext\": \"jpg\"}]";
-  prepopulatedInputArr: string = "[]";
+  prepopulatedInputArr: string = "[{\"key\":\"45f25547-3dce-43e7-bf9e-585fe94a08eb\",\"ext\":\"jpg\"}]";
+  // prepopulatedInputArr: string = "[]";
 
   
   @property()
   mode: string = "edit";
+
+  @property()
+  maximize: string = "no";
 
   @property()
   readOnly: boolean = false;
@@ -93,6 +97,9 @@ export class SfIUploader extends LitElement {
 
   @property()
   docType: string = "";
+
+  @property()
+  chunkSize: number = 102800;
 
   getAllowedExtensions = () => {
     return JSON.parse(this.allowedExtensions)
@@ -638,15 +645,43 @@ export class SfIUploader extends LitElement {
   renderKeyData = (ext: string, data: string) => {
 
     var html = '';
-
+    console.log("key Data", data)
     if(this.mode == "view"){
       if(ext == "png" || ext == "jpg") {
 
-        html += '<div class="d-flex justify-center" part="image-container">';
+        html += '<div class="d-flex justify-center align-center" part="image-container">';
         html += '<img src="'+data+'" alt="picture" part="image-component"/>'
+        if(this.maximize == "yes"){
+          html += '<button id="button-open-in-new-tab" part="button-icon"><span class="material-icons">open_in_new</span></button>'
+        }
         html += '</div>';
         (this._SfUploadContainer as HTMLDivElement).innerHTML = html;
+        (this._SfUploadContainer.querySelector('#button-open-in-new-tab') as HTMLButtonElement).addEventListener('click',()=>{
+          console.log('opening in new tab')
+          
+          const contentType: any = (data.match(/[^:]\w+\/[\w-+\d.]+(?=;|,)/) ?? [""])[0];
 
+          const byteCharacters = atob(data.substr(`data:${contentType};base64,`.length));
+          const byteArrays = [];
+
+          for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
+              const slice = byteCharacters.slice(offset, offset + 1024);
+
+              const byteNumbers = new Array(slice.length);
+              for (let i = 0; i < slice.length; i++) {
+                  byteNumbers[i] = slice.charCodeAt(i);
+              }
+
+              const byteArray = new Uint8Array(byteNumbers);
+
+              byteArrays.push(byteArray);
+          }
+          const blob = new Blob(byteArrays, {type: contentType});
+          const blobUrl = URL.createObjectURL(blob);
+
+          window.open(blobUrl, '_blank');
+          
+        })
       }
     }else{
       (this._SfDetailContainer as HTMLDivElement).style.display = 'block';
@@ -699,8 +734,8 @@ export class SfIUploader extends LitElement {
   }
 
   chunkify = (base64String: string) => {
-
-    const chunks = base64String.match(/.{1,4096}/g)
+    let regex = new RegExp(`.{1,${this.chunkSize}}`,'g')
+    const chunks = base64String.match(regex)
     return chunks;
 
   }
@@ -829,7 +864,7 @@ export class SfIUploader extends LitElement {
 
     var htmlStr = '';
     if(this.mode == "view"){
-      console.log("populating view input", this.inputArr.length)
+      console.log("populating view input", this.inputArr)
       if(this.inputArr.length > 0){
         Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderKeyData, this.setError, this.projectId)
       }
@@ -1186,38 +1221,50 @@ export class SfIUploader extends LitElement {
   }
   
   override render() {
+    if(this.mode == "view"){
+      return html`
+            
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+        <div class="SfIUploaderC">
+          <div id="upload-container">
 
-    return html`
-          
-      <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-      <div class="SfIUploaderC">
-        <div id="upload-container">
-
-        </div>
-
-        <div id="detail-container" class="hide" part="detail-container">
-
-        </div>
-
-      </div>
-      <div class="d-flex justify-between">
-          <div class="lb"></div>
-          <div>
-            <div class="div-row-error div-row-submit gone">
-              <div part="errormsg" class="div-row-error-message"></div>
-            </div>
-            <div class="div-row-success div-row-submit gone">
-              <div part="successmsg" class="div-row-success-message"></div>
-            </div>
           </div>
-          <div class="rb"></div>
-      </div>
-      <div class="d-flex justify-center">
-        <div class="loader-element"></div>
-      </div>
+        </div>
+      `;
+    }else{
+      return html`
+            
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+        <div class="SfIUploaderC">
+          <div id="upload-container">
 
-    `;
+          </div>
+
+          <div id="detail-container" class="hide" part="detail-container">
+
+          </div>
+
+        </div>
+        <div class="d-flex justify-between">
+            <div class="lb"></div>
+            <div>
+              <div class="div-row-error div-row-submit gone">
+                <div part="errormsg" class="div-row-error-message"></div>
+              </div>
+              <div class="div-row-success div-row-submit gone">
+                <div part="successmsg" class="div-row-success-message"></div>
+              </div>
+            </div>
+            <div class="rb"></div>
+        </div>
+        <div class="d-flex justify-center">
+          <div class="loader-element"></div>
+        </div>
+
+      `;
+    }
   }
 
 }

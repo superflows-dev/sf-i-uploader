@@ -141,11 +141,14 @@ const getKeyData = async (key: string, apiId: string, _SfLoader: any, callbackSu
       body["projectid"] = projectId;
     }
     const xhr : any = (await prepareXhr(body, url, _SfLoader, authorization)) as any;
-    _SfLoader.innerHTML = '';
+    if(_SfLoader != null){
+      _SfLoader.innerHTML = '';
+    }
     
     if(xhr.status == 200) {
 
       const jsonRespose = JSON.parse(xhr.responseText);
+      console.log(jsonRespose)
       callbackSuccess(jsonRespose.ext, jsonRespose.data);
       
     } else {
