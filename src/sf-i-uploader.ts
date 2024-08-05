@@ -38,8 +38,8 @@ export class SfIUploader extends LitElement {
   
   @property()
   // prepopulatedInputArr: string = "[{\"key\":\"2c39a366-1532-49a1-891e-bdcca8d5d215\",\"ext\": \"jpg\"},{\"key\": \"730e310f-5ae6-4641-a2af-eae3a535b6e9\",\"ext\": \"jpg\"}]";
-  prepopulatedInputArr: string = "[{\"key\":\"45f25547-3dce-43e7-bf9e-585fe94a08eb\",\"ext\":\"jpg\"}]";
-  // prepopulatedInputArr: string = "[]";
+  // prepopulatedInputArr: string = "[{\"key\":\"45f25547-3dce-43e7-bf9e-585fe94a08eb\",\"ext\":\"jpg\"}]";
+  prepopulatedInputArr: string = "[]";
 
   
   @property()
@@ -656,6 +656,7 @@ export class SfIUploader extends LitElement {
         }
         html += '</div>';
         (this._SfUploadContainer as HTMLDivElement).innerHTML = html;
+        (this._SfUploadContainer as HTMLDivElement).style.display = 'flex';
         (this._SfUploadContainer.querySelector('#button-open-in-new-tab') as HTMLButtonElement).addEventListener('click',()=>{
           console.log('opening in new tab')
           
