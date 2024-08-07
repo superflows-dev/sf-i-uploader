@@ -1020,7 +1020,9 @@ export class SfIUploader extends LitElement {
     if(!this.readOnly && this.inputArr.length < parseInt(this.max) && this.mode != "view") {
       htmlStr += '<button id="button-add" part="button" class="mt-10">'+this.newButtonText+'</button>';
     }
-    
+    if((this._SfUploadContainer as HTMLDivElement) == null){
+      return;
+    }
     (this._SfUploadContainer as HTMLDivElement).innerHTML = htmlStr;
 
     (this._SfUploadContainer as HTMLDivElement).querySelector('#button-add')?.addEventListener('click', () => {
