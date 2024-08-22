@@ -11,8 +11,10 @@ import Util from './util';
 import Api from './api';
 import pdfjs from '@bundled-es-modules/pdfjs-dist';
 
-pdfjs.GlobalWorkerOptions.workerSrc =
-  '/node_modules/@bundled-es-modules/pdfjs-dist/build/pdf.worker.min.js';
+// pdfjs.GlobalWorkerOptions.workerSrc =
+//   '/node_modules/@bundled-es-modules/pdfjs-dist/build/pdf.worker.min.js';
+// pdfjs.GlobalWorkerOptions.workerSrc =
+//   '/node_modules/@bundled-es-modules/pdfjs-dist/build/pdf.worker.min.js';
 /*
 
 Modes: View, Add, Edit, Delete, Admin
@@ -721,7 +723,7 @@ export class SfIUploader extends LitElement {
     this.queueRenderPage(this.pageNum, canvas, scale, ctx);
   }
 
-  expandPdfDetail = (data: any, ext: string) => {
+  expandPdfDetail = async (data: any, ext: string) => {
     let detailHtml = '';
     detailHtml += '<div class="d-flex justify-between align-center m-10" part="details-controls-container">';
       if(this.allowDownload == "yes"){
@@ -757,6 +759,7 @@ export class SfIUploader extends LitElement {
       (this._SfDetailContainer as HTMLDivElement).style.display = 'none';
 
     });
+    pdfjs.GlobalWorkerOptions.workerSrc = await this.loadWorkerURL("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.6.172/pdf.worker.min.js");
     const pdfjsLib = pdfjs;
     var loadingTask = pdfjsLib.getDocument({data: atob(data.replace("data:application/pdf;base64,",""))});
     var canvas:any = this._SfDetailContainer.querySelector('#pdf-canvas');
@@ -785,8 +788,26 @@ export class SfIUploader extends LitElement {
     });
   }
   
+  loadWorkerURL = async (url:string) => {
+    let cachedJSDfd = new pdfjs.PromiseCapability();
+    var xmlhttp: XMLHttpRequest;
+    xmlhttp=new XMLHttpRequest();
 
-  renderKeyData = (ext: string, data: string) => {
+    //the callback function to be callled when AJAX request comes back
+    xmlhttp.onreadystatechange=function(){
+        if (xmlhttp.readyState==4 && xmlhttp.status==200){
+            var workerJSBlob = new Blob([xmlhttp.responseText], {
+                type: "text/javascript"
+            });
+            cachedJSDfd.resolve(window.URL.createObjectURL(workerJSBlob));
+        }
+    };
+    xmlhttp.open("GET",url,true);
+    xmlhttp.send();
+    return cachedJSDfd.promise;
+}
+
+  renderKeyData = async (ext: string, data: string) => {
 
     var html = '';
     console.log("key Data", data)
@@ -839,7 +860,7 @@ export class SfIUploader extends LitElement {
         (this._SfUploadContainer as HTMLDivElement).innerHTML = html;
         (this._SfUploadContainer as HTMLDivElement).style.display = 'flex';
         
-        // pdfjs.GlobalWorkerOptions.workerSrc = PDFWorker;
+        pdfjs.GlobalWorkerOptions.workerSrc = await this.loadWorkerURL("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.6.172/pdf.worker.min.js");
         const pdfjsLib = pdfjs;
         
         // Using DocumentInitParameters object to load binary data.
