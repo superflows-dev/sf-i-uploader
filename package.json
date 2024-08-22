@@ -1,7 +1,7 @@
 {
   "name": "sf-i-uploader",
   "private": false,
-  "version": "1.0.91",
+  "version": "1.0.95",
   "description": "Superflows Navigation Component",
   "main": "sf-i-uploader.js",
   "module": "sf-i-uploader.js",
@@ -60,6 +60,7 @@
   "devDependencies": {
     "@11ty/eleventy": "^1.0.1",
     "@11ty/eleventy-plugin-syntaxhighlight": "^4.0.0",
+    "@bundled-es-modules/pdfjs-dist": "^3.6.172-alpha.1",
     "@custom-elements-manifest/analyzer": "^0.6.3",
     "@open-wc/testing": "^3.1.7",
     "@rollup/plugin-node-resolve": "^13.3.0",
@@ -78,7 +79,7 @@
     "rollup": "^2.73.0",
     "rollup-plugin-summary": "^1.4.3",
     "rollup-plugin-terser": "^7.0.2",
-    "typescript": "~4.7.4"
+    "typescript": "~4.9.4"
   },
   "customElements": "custom-elements.json"
 }

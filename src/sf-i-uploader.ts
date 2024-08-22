@@ -4,24 +4,21 @@
  * SPDX-License-Identifier: MIT
  */
 
+
 import {LitElement, html, css, PropertyValueMap} from 'lit';
-// import {customElement, query, queryAssignedElements, property} from 'lit/decorators.js';
-// import {SfISelect} from 'sf-i-select';
-// import {SfISubSelect} from 'sf-i-sub-select';
 import {customElement, query, property} from 'lit/decorators.js';
 import Util from './util';
 import Api from './api';
-// import {LitElement, html, css} from 'lit';
-// import {customElement} from 'lit/decorators.js';
+import pdfjs from '@bundled-es-modules/pdfjs-dist';
 
-
+pdfjs.GlobalWorkerOptions.workerSrc =
+  '/node_modules/@bundled-es-modules/pdfjs-dist/build/pdf.worker.min.js';
 /*
 
 Modes: View, Add, Edit, Delete, Admin
 DB: partitionKey, rangeKey, values
 
 */
-
 /**
  * SfIUploader element.
  * @fires renderComplete - When the list is populated
@@ -39,6 +36,9 @@ export class SfIUploader extends LitElement {
   @property()
   // prepopulatedInputArr: string = "[{\"key\":\"2c39a366-1532-49a1-891e-bdcca8d5d215\",\"ext\": \"jpg\"},{\"key\": \"730e310f-5ae6-4641-a2af-eae3a535b6e9\",\"ext\": \"jpg\"}]";
   // prepopulatedInputArr: string = "[{\"key\":\"45f25547-3dce-43e7-bf9e-585fe94a08eb\",\"ext\":\"jpg\"}]";
+  // prepopulatedInputArr: string = "[{\"key\":\"b70fead2-0068-4d9a-a210-5e2a0ff469ab\",\"ext\":\"pdf\"}]";
+  // prepopulatedInputArr: string = "[{\"key\":\"e59d2652-2dc8-4748-956a-3634553736bc\",\"ext\":\"pdf\"}]";
+  // prepopulatedInputArr: string = "[{\"key\":\"b70fead2-0068-4d9a-a210-5e2a0ff469ab\",\"ext\":\"pdf\"},{\"key\":\"430f0879-15c3-4fb5-a011-7616f9f696ee\",\"ext\":\"xlsx\"}]";
   prepopulatedInputArr: string = "[]";
 
   
@@ -91,6 +91,9 @@ export class SfIUploader extends LitElement {
 
   @property()
   allowedExtensions: string = "[\"jpg\", \"png\", \"pdf\"]";
+  
+  @property()
+  extractableExtensions: string = "[\"jpg\", \"png\", \"pdf\"]";
 
   @property()
   extractJobId: string = "";
@@ -103,6 +106,10 @@ export class SfIUploader extends LitElement {
 
   getAllowedExtensions = () => {
     return JSON.parse(this.allowedExtensions)
+  }
+
+  getExtractableExtensions = () => {
+    return JSON.parse(this.extractableExtensions)
   }
 
   // setAllowedExtensions = (arr: any) => {
@@ -208,6 +215,7 @@ export class SfIUploader extends LitElement {
 
     
     .SfIUploaderC {
+      width: 100%
     }
 
     .left-sticky {
@@ -548,6 +556,14 @@ export class SfIUploader extends LitElement {
         50%{background-size:calc(100%/3) 100%,calc(100%/3) 0%  ,calc(100%/3) 100%}
         66%{background-size:calc(100%/3) 100%,calc(100%/3) 100%,calc(100%/3) 0%  }
     }
+    .pdf-canvas-thumbnail {
+      width:200px
+    }
+    .pdf-canvas {
+      width:90%;
+      margin-left: 5%;
+      mergin-right: 5%;
+    }
   `;
 
   @query('.div-row-error')
@@ -586,7 +602,10 @@ export class SfIUploader extends LitElement {
   //   return await Util.callApi(url, data, authorization);
 
   // }
-
+  pageNum = 1;
+  pageRendering = false;
+  pageNumPending:any = null;
+  pdfDoc:any = null
   clearMessages = () => {
     this._SfRowError.style.display = 'none';
     this._SfRowErrorMessage.innerHTML = '';
@@ -642,6 +661,114 @@ export class SfIUploader extends LitElement {
     this.matchArr[0] = match
   }
 
+  renderPdfPage = (num:number, canvas: any, scale: any, ctx: any) => {
+    this.pageRendering = true;
+    // Using promise to fetch the page
+    let thisObj = this
+    this.pdfDoc.getPage(num).then(function(page:any) {
+      var viewport = page.getViewport({scale: scale});
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      // Render PDF page into canvas context
+      var renderContext = {
+        canvasContext: ctx,
+        viewport: viewport
+      };
+      var renderTask = page.render(renderContext);
+
+      // Wait for rendering to finish
+      
+      renderTask.promise.then(function() {
+        thisObj.pageRendering = false;
+        if (thisObj.pageNumPending !== null) {
+          // New page rendering is pending
+          thisObj.renderPdfPage(thisObj.pageNumPending, canvas, scale, ctx);
+          thisObj.pageNumPending = null;
+        }
+      });
+    });
+    console.log("rendering page", this._SfDetailContainer.querySelector('#pdf-page-num'), num)
+    if(this._SfDetailContainer.querySelector('#pdf-page-num') != null){
+      this._SfDetailContainer.querySelector('#pdf-page-num').innerHTML = num + ""
+    }
+  }
+
+  queueRenderPage = (num:number, canvas: any, scale: any, ctx: any) => {
+    if (this.pageRendering) {
+      this.pageNumPending = num;
+    } else {
+      this.renderPdfPage(num, canvas, scale, ctx);
+    }
+  }
+
+  onPrevPage = (canvas: any, scale: any, ctx: any)=>{
+    if (this.pageNum <= 1) {
+      return;
+    }
+    this.pageNum--;
+    this.queueRenderPage(this.pageNum, canvas, scale, ctx);
+  }
+
+  onNextPage = (canvas: any, scale: any, ctx: any)=>{
+    if (this.pageNum >= this.pdfDoc.numPages) {
+      return;
+    }
+    this.pageNum++;
+    this.queueRenderPage(this.pageNum, canvas, scale, ctx);
+  }
+
+  expandPdfDetail = (data: any) => {
+    let detailHtml = '';
+    detailHtml += '<div class="d-flex justify-between align-center m-10" part="details-controls-container">';
+    detailHtml += '<button class="invisible" part="button-icon"><span class="material-icons">close</span></button>'
+      detailHtml += '<div id="pdf-controls-container" part="pdf-controls-container" class="d-flex justify-end align-center m-10">'
+        detailHtml += '<button id="pdf-prev" part="button-icon"><span class="material-icons">arrow_back</span></button>'
+        detailHtml += '<span class="m-5" part="pdf-pages">Page: <span id="pdf-page-num" part="pdf-page-num"></span> / <span id="pdf-page-count" part="pdf-page-count"></span></span>';
+        detailHtml += '<button id="pdf-next" part="button-icon"><span class="material-icons">arrow_forward</span></button>'
+      detailHtml += '</div>'  
+    detailHtml += '<button id="button-detail-cancel" part="button-icon"><span class="material-icons">close</span></button>'
+    detailHtml += '</div>';
+    detailHtml += '<canvas id="pdf-canvas" class="pdf-canvas", part="pdf-canvas"></canvas>';
+
+    (this._SfDetailContainer as HTMLDivElement).innerHTML = detailHtml;
+    (this._SfDetailContainer as HTMLDivElement).style.display = 'block';
+    console.log('detail container', (this._SfDetailContainer as HTMLDivElement).innerHTML);
+    (this._SfDetailContainer as HTMLDivElement).querySelector('#button-detail-cancel')?.addEventListener('click', () => {
+
+      (this._SfDetailContainer as HTMLDivElement).innerHTML = '';
+      (this._SfDetailContainer as HTMLDivElement).style.display = 'none';
+
+    });
+    const pdfjsLib = pdfjs;
+    var loadingTask = pdfjsLib.getDocument({data: atob(data.replace("data:application/pdf;base64,",""))});
+    var canvas:any = this._SfDetailContainer.querySelector('#pdf-canvas');
+    var ctx = canvas.getContext('2d');
+    var scale = 1.5;
+    let thisObj = this;
+    
+    this._SfDetailContainer.querySelector('#pdf-prev')?.addEventListener('click', () => {
+      thisObj.onPrevPage(canvas, scale, ctx)
+    });
+    this._SfDetailContainer.querySelector('#pdf-next')?.addEventListener('click', () => {
+      thisObj.onNextPage(canvas, scale, ctx)
+    });
+    loadingTask.promise.then(function(pdf:any) {
+      console.log('PDF loaded', canvas);
+      thisObj.pdfDoc = pdf
+      thisObj.pageNum = 1,
+      thisObj.pageRendering = false;
+      thisObj.pageNumPending = null;
+      thisObj._SfDetailContainer.querySelector('#pdf-page-count').innerHTML = pdf.numPages + ""
+      thisObj._SfDetailContainer.querySelector('#pdf-controls-container').style.display = (pdf.numPages == 1) ? "none" : "flex"
+      thisObj.renderPdfPage(thisObj.pageNum, canvas, scale, ctx)
+    }, function (reason: any) {
+      // PDF loading error
+      console.error(reason);
+    });
+  }
+  
+
   renderKeyData = (ext: string, data: string) => {
 
     var html = '';
@@ -650,42 +777,83 @@ export class SfIUploader extends LitElement {
       if(ext == "png" || ext == "jpg") {
 
         html += '<div class="d-flex justify-center align-center" part="image-container">';
-        html += '<img src="'+data+'" alt="picture" part="image-component"/>'
+        html += '<img src="'+data+'" alt="picture" part="image-component" class="mr-10"/>'
         if(this.maximize == "yes"){
           html += '<button id="button-open-in-new-tab" part="button-icon"><span class="material-icons">open_in_new</span></button>'
         }
         html += '</div>';
         (this._SfUploadContainer as HTMLDivElement).innerHTML = html;
         (this._SfUploadContainer as HTMLDivElement).style.display = 'flex';
-        (this._SfUploadContainer.querySelector('#button-open-in-new-tab') as HTMLButtonElement).addEventListener('click',()=>{
-          console.log('opening in new tab')
-          
-          const contentType: any = (data.match(/[^:]\w+\/[\w-+\d.]+(?=;|,)/) ?? [""])[0];
+        if(this.maximize == "yes"){
+          (this._SfUploadContainer.querySelector('#button-open-in-new-tab') as HTMLButtonElement).addEventListener('click',()=>{
+            console.log('opening in new tab')
+            
+            const contentType: any = (data.match(/[^:]\w+\/[\w-+\d.]+(?=;|,)/) ?? [""])[0];
 
-          const byteCharacters = atob(data.substr(`data:${contentType};base64,`.length));
-          const byteArrays = [];
+            const byteCharacters = atob(data.substr(`data:${contentType};base64,`.length));
+            const byteArrays = [];
 
-          for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
-              const slice = byteCharacters.slice(offset, offset + 1024);
+            for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
+                const slice = byteCharacters.slice(offset, offset + 1024);
 
-              const byteNumbers = new Array(slice.length);
-              for (let i = 0; i < slice.length; i++) {
-                  byteNumbers[i] = slice.charCodeAt(i);
-              }
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) {
+                    byteNumbers[i] = slice.charCodeAt(i);
+                }
 
-              const byteArray = new Uint8Array(byteNumbers);
+                const byteArray = new Uint8Array(byteNumbers);
 
-              byteArrays.push(byteArray);
-          }
-          const blob = new Blob(byteArrays, {type: contentType});
-          const blobUrl = URL.createObjectURL(blob);
+                byteArrays.push(byteArray);
+            }
+            const blob = new Blob(byteArrays, {type: contentType});
+            const blobUrl = URL.createObjectURL(blob);
 
-          window.open(blobUrl, '_blank');
-          
-        })
+            window.open(blobUrl, '_blank');
+            
+          })
+        }
+      }else if(ext == "pdf"){
+        html += '<div class="d-flex justify-center align-center" part="pdf-thumbnail-container">';
+        html += '<canvas id="pdf-canvas-thumbnail" class="pdf-canvas-thumbnail", part="pdf-canvas-thumbnail"></canvas>';
+        if(this.maximize == "yes"){
+          html += '<button id="button-expand-pdf" part="button-icon"><span class="material-icons">open_in_new</span></button>';
+        }
+        html += '</div>';
+        (this._SfUploadContainer as HTMLDivElement).innerHTML = html;
+        (this._SfUploadContainer as HTMLDivElement).style.display = 'flex';
+        
+        // pdfjs.GlobalWorkerOptions.workerSrc = PDFWorker;
+        const pdfjsLib = pdfjs;
+        
+        // Using DocumentInitParameters object to load binary data.
+        var loadingTask = pdfjsLib.getDocument({data: atob(data.replace("data:application/pdf;base64,",""))});
+        
+        var canvas:any = this._SfUploadContainer.querySelector('#pdf-canvas-thumbnail');
+        var ctx = canvas.getContext('2d');
+        var scale = 0.8;
+        let thisObj = this;
+        if(this.maximize == "yes"){
+          (this._SfUploadContainer.querySelector('#button-expand-pdf') as HTMLButtonElement).addEventListener('click',()=>{
+            this.expandPdfDetail(data)
+          })
+        }
+        loadingTask.promise.then(function(pdf:any) {
+          console.log('PDF loaded');
+          thisObj.pdfDoc = pdf
+          thisObj.pageNum = 1,
+          thisObj.pageRendering = false;
+          thisObj.pageNumPending = null;
+          // thisObj._SfUploadContainer.querySelector('#pdf-page-count').innerHTML = pdf.numPages + ""
+          // thisObj._SfUploadContainer.querySelector('#pdf-controls-container').style.display = (pdf.numPages == 1) ? "none" : "block"
+          thisObj.renderPdfPage(thisObj.pageNum, canvas, scale, ctx)
+        }, function (reason: any) {
+          // PDF loading error
+          console.error(reason);
+        });
       }
     }else{
       (this._SfDetailContainer as HTMLDivElement).style.display = 'block';
+      let flagSetHtml = true;
       html += '<div class="d-flex justify-between m-10">';
       html += '<button class="invisible" part="button-icon"><span class="material-icons">close</span></button>'
       html += '<button id="button-detail-cancel" part="button-icon"><span class="material-icons">close</span></button>'
@@ -699,6 +867,9 @@ export class SfIUploader extends LitElement {
         html += '</div>';
 
 
+      } else if(ext == "pdf"){
+        this.expandPdfDetail(data)
+        flagSetHtml = false
       } else {
 
         html += '<div class="d-flex justify-center align-center">';
@@ -708,7 +879,9 @@ export class SfIUploader extends LitElement {
 
       }
 
-      (this._SfDetailContainer as HTMLDivElement).innerHTML = html;
+      if(flagSetHtml){
+        (this._SfDetailContainer as HTMLDivElement).innerHTML = html;
+      }
 
       // console.log('rendering key data', html);
 
@@ -724,7 +897,7 @@ export class SfIUploader extends LitElement {
         const a = document.createElement("a");
         a.style.display = "none";
         a.href = data;
-        a.download = "download_"+new Date().getTime()+".pdf";
+        a.download = "download_"+new Date().getTime()+"." + ext;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a); 
@@ -805,7 +978,7 @@ export class SfIUploader extends LitElement {
   beginUploadJob = (fileIndex: any, file: any) => {
 
     const fileName = file.name;
-    const ext = fileName.split(".")[file.name.split(".").length - 1];
+    const ext = fileName.split(".")[file.name.split(".").length - 1].toLowerCase();
     const key = Util.newUuidV4();
     
     const reader = new FileReader();
@@ -836,7 +1009,7 @@ export class SfIUploader extends LitElement {
         const event = new CustomEvent('uploadCompleted', {detail: keys, bubbles: true, composed: true});
         this.dispatchEvent(event);
 
-        if(this.extract.toLowerCase() == "yes") {
+        if(this.extract.toLowerCase() == "yes" && this.getExtractableExtensions().indexOf(ext) >= 0) {
 
           const jobId = await this.processExtract(key, fileIndex);
           this.inputArr[fileIndex]["jobId"] = jobId;
@@ -865,7 +1038,7 @@ export class SfIUploader extends LitElement {
 
     var htmlStr = '';
     if(this.mode == "view"){
-      console.log("populating view input", this.inputArr)
+      console.log("populating view input", this.inputArr, this.projectId)
       if(this.inputArr.length > 0){
         Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderKeyData, this.setError, this.projectId)
       }
@@ -976,13 +1149,14 @@ export class SfIUploader extends LitElement {
               htmlStr += '<button id="button-delete-file-cancel-'+i+'" part="button-icon" class="mr-10 button-icon"><span class="material-icons">close</span></button>'
               htmlStr += '<button id="button-delete-file-confirm-'+i+'" part="button-icon" class="button-icon"><span class="material-icons">delete</span><span class="material-icons">done</span></button>'
             }else{
-              if(this.extract.toLowerCase() != "yes"){
+              if(this.extract.toLowerCase() != "yes" && this.getExtractableExtensions().indexOf(ext) < 0){
                 htmlStr += '<button id="button-delete-file-'+i+'" part="button-icon" class="mr-10 button-icon"><span class="material-icons">delete</span></button>'
                 
               }
               htmlStr += '<button id="button-open-'+i+'" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
             }
             htmlStr += '</div>';
+            
           }else {
             const fileName = this.inputArr[i]['file'].name;
             const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
@@ -1005,6 +1179,9 @@ export class SfIUploader extends LitElement {
             htmlStr += '</div>'
           }
 
+          if(this.inputArr[i].file != null && this.getExtractableExtensions().indexOf(this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1]) < 0){
+            htmlStr += '<div id="disclaimer-message-container" part="disclaimer-message-container">OCR is not supported for this file type.</div>'
+          }
           if(this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null)){
             htmlStr += '<div id="message-container" class="hide" part="message-container"></div>'
           }
@@ -1177,12 +1354,12 @@ export class SfIUploader extends LitElement {
         } else if (this.inputArr[j]["arrWords"] != null) {
 
         } else if (this.inputArr[j]["jobId"] != null) {
-          if(this.extract.toLowerCase() == "yes"){
+          if(this.extract.toLowerCase() == "yes" && this.getExtractableExtensions().indexOf(this.inputArr[j]["ext"]) >= 0){
             flag = false;
             break
           }
         } else if (this.inputArr[j]["key"] != null) {
-          if(this.extract.toLowerCase() == "yes"){
+          if(this.extract.toLowerCase() == "yes" && this.getExtractableExtensions().indexOf(this.inputArr[j]["ext"]) >= 0){
             flag = false;
             break;
           }
@@ -1231,6 +1408,9 @@ export class SfIUploader extends LitElement {
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
         <div class="SfIUploaderC">
           <div id="upload-container">
+
+          </div>
+          <div id="detail-container" class="hide" part="detail-container">
 
           </div>
         </div>
