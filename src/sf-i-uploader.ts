@@ -104,6 +104,9 @@ export class SfIUploader extends LitElement {
   @property()
   chunkSize: number = 102800;
 
+  @property()
+  allowDownload: string = "no";
+
   getAllowedExtensions = () => {
     return JSON.parse(this.allowedExtensions)
   }
@@ -718,22 +721,36 @@ export class SfIUploader extends LitElement {
     this.queueRenderPage(this.pageNum, canvas, scale, ctx);
   }
 
-  expandPdfDetail = (data: any) => {
+  expandPdfDetail = (data: any, ext: string) => {
     let detailHtml = '';
     detailHtml += '<div class="d-flex justify-between align-center m-10" part="details-controls-container">';
-    detailHtml += '<button class="invisible" part="button-icon"><span class="material-icons">close</span></button>'
+      if(this.allowDownload == "yes"){
+        detailHtml += '<button part="button-icon" id="download-button"><span class="material-icons">cloud_download</span></button>'
+      }else{
+        detailHtml += '<button class="invisible" part="button-icon"><span class="material-icons">close</span></button>'
+      }
       detailHtml += '<div id="pdf-controls-container" part="pdf-controls-container" class="d-flex justify-end align-center m-10">'
         detailHtml += '<button id="pdf-prev" part="button-icon"><span class="material-icons">arrow_back</span></button>'
         detailHtml += '<span class="m-5" part="pdf-pages">Page: <span id="pdf-page-num" part="pdf-page-num"></span> / <span id="pdf-page-count" part="pdf-page-count"></span></span>';
         detailHtml += '<button id="pdf-next" part="button-icon"><span class="material-icons">arrow_forward</span></button>'
       detailHtml += '</div>'  
-    detailHtml += '<button id="button-detail-cancel" part="button-icon"><span class="material-icons">close</span></button>'
+      detailHtml += '<button id="button-detail-cancel" part="button-icon"><span class="material-icons">close</span></button>'
     detailHtml += '</div>';
     detailHtml += '<canvas id="pdf-canvas" class="pdf-canvas", part="pdf-canvas"></canvas>';
 
     (this._SfDetailContainer as HTMLDivElement).innerHTML = detailHtml;
     (this._SfDetailContainer as HTMLDivElement).style.display = 'block';
-    console.log('detail container', (this._SfDetailContainer as HTMLDivElement).innerHTML);
+    (this._SfDetailContainer as HTMLDivElement).querySelector('#download-button')?.addEventListener('click', () => {
+
+      const a = document.createElement("a");
+      a.style.display = "none";
+      a.href = data;
+      a.download = "download_"+new Date().getTime()+"." + ext;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a); 
+
+    });
     (this._SfDetailContainer as HTMLDivElement).querySelector('#button-detail-cancel')?.addEventListener('click', () => {
 
       (this._SfDetailContainer as HTMLDivElement).innerHTML = '';
@@ -834,7 +851,7 @@ export class SfIUploader extends LitElement {
         let thisObj = this;
         if(this.maximize == "yes"){
           (this._SfUploadContainer.querySelector('#button-expand-pdf') as HTMLButtonElement).addEventListener('click',()=>{
-            this.expandPdfDetail(data)
+            this.expandPdfDetail(data, ext)
           })
         }
         loadingTask.promise.then(function(pdf:any) {
@@ -868,7 +885,7 @@ export class SfIUploader extends LitElement {
 
 
       } else if(ext == "pdf"){
-        this.expandPdfDetail(data)
+        this.expandPdfDetail(data, ext)
         flagSetHtml = false
       } else {
 
@@ -1180,7 +1197,7 @@ export class SfIUploader extends LitElement {
           }
 
           if(this.inputArr[i].file != null && this.getExtractableExtensions().indexOf(this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1]) < 0){
-            htmlStr += '<div id="disclaimer-message-container" part="disclaimer-message-container">OCR is not supported for this file type.</div>'
+            htmlStr += '<div id="disclaimer-message-container" part="disclaimer-message-container">Text analysis is not supported for this file type.</div>'
           }
           if(this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null)){
             htmlStr += '<div id="message-container" class="hide" part="message-container"></div>'
