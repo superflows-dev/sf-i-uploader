@@ -565,9 +565,10 @@ export class SfIUploader extends LitElement {
       width:200px
     }
     .pdf-canvas {
-      width:90%;
-      margin-left: 5%;
-      mergin-right: 5%;
+      // width:90%;
+      // margin-left: 5%;
+      // mergin-right: 5%;
+      align-self: center
     }
   `;
 
@@ -727,7 +728,7 @@ export class SfIUploader extends LitElement {
     let detailHtml = '';
     detailHtml += '<div class="d-flex justify-between align-center m-10" part="details-controls-container">';
       if(this.allowDownload == "yes"){
-        detailHtml += '<button part="button-icon" id="download-button"><span class="material-icons">cloud_download</span></button>'
+        detailHtml += '<button part="button-icon" id="download-pdf-button"><span class="material-icons">cloud_download</span></button>'
       }else{
         detailHtml += '<button class="invisible" part="button-icon"><span class="material-icons">close</span></button>'
       }
@@ -741,8 +742,8 @@ export class SfIUploader extends LitElement {
     detailHtml += '<canvas id="pdf-canvas" class="pdf-canvas", part="pdf-canvas"></canvas>';
 
     (this._SfDetailContainer as HTMLDivElement).innerHTML = detailHtml;
-    (this._SfDetailContainer as HTMLDivElement).style.display = 'block';
-    (this._SfDetailContainer as HTMLDivElement).querySelector('#download-button')?.addEventListener('click', () => {
+    (this._SfDetailContainer as HTMLDivElement).style.display = 'flex';
+    (this._SfDetailContainer as HTMLDivElement).querySelector('#download-pdf-button')?.addEventListener('click', () => {
 
       const a = document.createElement("a");
       a.style.display = "none";
@@ -764,7 +765,7 @@ export class SfIUploader extends LitElement {
     var loadingTask = pdfjsLib.getDocument({data: atob(data.replace("data:application/pdf;base64,",""))});
     var canvas:any = this._SfDetailContainer.querySelector('#pdf-canvas');
     var ctx = canvas.getContext('2d');
-    var scale = 1.5;
+    var scale = 1.2;
     let thisObj = this;
     
     this._SfDetailContainer.querySelector('#pdf-prev')?.addEventListener('click', () => {
@@ -890,7 +891,7 @@ export class SfIUploader extends LitElement {
         });
       }
     }else{
-      (this._SfDetailContainer as HTMLDivElement).style.display = 'block';
+      (this._SfDetailContainer as HTMLDivElement).style.display = 'flex';
       let flagSetHtml = true;
       html += '<div class="d-flex justify-between m-10">';
       html += '<button class="invisible" part="button-icon"><span class="material-icons">close</span></button>'
@@ -1078,7 +1079,9 @@ export class SfIUploader extends LitElement {
     if(this.mode == "view"){
       console.log("populating view input", this.inputArr, this.projectId)
       if(this.inputArr.length > 0){
-        Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderKeyData, this.setError, this.projectId)
+        Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderKeyData, (errMsg: string)=>{this.setError(errMsg);setTimeout(() => {
+          this.clearMessages();
+        }, 3000)}, this.projectId)
       }
       // for(var i = 0; i < this.inputArr.length; i++){
       //   if(this.inputArr[i].file == null) {
@@ -1312,7 +1315,9 @@ export class SfIUploader extends LitElement {
 
       (this._SfUploadContainer as HTMLDivElement).querySelector('#button-open-'+i)?.addEventListener('click', (ev: any) => {
         const index = ev.currentTarget.id.split("-")[2];
-        Api.getKeyData(this.inputArr[index]['key'], this.apiId, this._SfLoader, this.renderKeyData, this.setError, this.projectId)
+        Api.getKeyData(this.inputArr[index]['key'], this.apiId, this._SfLoader, this.renderKeyData, (errMsg: string)=>{this.setError(errMsg);setTimeout(() => {
+          this.clearMessages();
+        }, 3000)}, this.projectId)
       });
 
     }
@@ -1448,7 +1453,7 @@ export class SfIUploader extends LitElement {
           <div id="upload-container">
 
           </div>
-          <div id="detail-container" class="hide" part="detail-container">
+          <div id="detail-container" class="hide d-flex flex-col" part="detail-container">
 
           </div>
         </div>
@@ -1463,7 +1468,7 @@ export class SfIUploader extends LitElement {
 
           </div>
 
-          <div id="detail-container" class="hide" part="detail-container">
+          <div id="detail-container" class="hide d-flex flex-col" part="detail-container">
 
           </div>
 

@@ -1,7 +1,7 @@
 {
   "name": "sf-i-uploader",
   "private": false,
-  "version": "1.0.97",
+  "version": "1.0.98",
   "description": "Superflows Navigation Component",
   "main": "sf-i-uploader.js",
   "module": "sf-i-uploader.js",
