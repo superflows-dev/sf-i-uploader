@@ -38,10 +38,10 @@ export class SfIUploader extends LitElement {
   @property()
   // prepopulatedInputArr: string = "[{\"key\":\"2c39a366-1532-49a1-891e-bdcca8d5d215\",\"ext\": \"jpg\"},{\"key\": \"730e310f-5ae6-4641-a2af-eae3a535b6e9\",\"ext\": \"jpg\"}]";
   // prepopulatedInputArr: string = "[{\"key\":\"45f25547-3dce-43e7-bf9e-585fe94a08eb\",\"ext\":\"jpg\"}]";
-  // prepopulatedInputArr: string = "[{\"key\":\"b70fead2-0068-4d9a-a210-5e2a0ff469ab\",\"ext\":\"pdf\"}]";
+  prepopulatedInputArr: string = "[{\"key\":\"b70fead2-0068-4d9a-a210-5e2a0ff469ab\",\"ext\":\"pdf\"}]";
   // prepopulatedInputArr: string = "[{\"key\":\"e59d2652-2dc8-4748-956a-3634553736bc\",\"ext\":\"pdf\"}]";
   // prepopulatedInputArr: string = "[{\"key\":\"b70fead2-0068-4d9a-a210-5e2a0ff469ab\",\"ext\":\"pdf\"},{\"key\":\"430f0879-15c3-4fb5-a011-7616f9f696ee\",\"ext\":\"xlsx\"}]";
-  prepopulatedInputArr: string = "[]";
+  // prepopulatedInputArr: string = "[]";
 
   
   @property()
@@ -732,14 +732,14 @@ export class SfIUploader extends LitElement {
       }else{
         detailHtml += '<button class="invisible" part="button-icon"><span class="material-icons">close</span></button>'
       }
-      detailHtml += '<div id="pdf-controls-container" part="pdf-controls-container" class="d-flex justify-end align-center m-10">'
+      detailHtml += '<div id="pdf-controls-container" part="pdf-controls-container" class="d-flex justify-end align-center ml-10 mr-10">'
         detailHtml += '<button id="pdf-prev" part="button-icon"><span class="material-icons">arrow_back</span></button>'
         detailHtml += '<span class="m-5" part="pdf-pages">Page: <span id="pdf-page-num" part="pdf-page-num"></span> / <span id="pdf-page-count" part="pdf-page-count"></span></span>';
         detailHtml += '<button id="pdf-next" part="button-icon"><span class="material-icons">arrow_forward</span></button>'
       detailHtml += '</div>'  
       detailHtml += '<button id="button-detail-cancel" part="button-icon"><span class="material-icons">close</span></button>'
     detailHtml += '</div>';
-    detailHtml += '<canvas id="pdf-canvas" class="pdf-canvas", part="pdf-canvas"></canvas>';
+    detailHtml += '<canvas id="pdf-canvas" class="pdf-canvas mb-20", part="pdf-canvas"></canvas>';
 
     (this._SfDetailContainer as HTMLDivElement).innerHTML = detailHtml;
     (this._SfDetailContainer as HTMLDivElement).style.display = 'flex';
