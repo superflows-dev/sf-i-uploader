@@ -38,10 +38,11 @@ export class SfIUploader extends LitElement {
   @property()
   // prepopulatedInputArr: string = "[{\"key\":\"2c39a366-1532-49a1-891e-bdcca8d5d215\",\"ext\": \"jpg\"},{\"key\": \"730e310f-5ae6-4641-a2af-eae3a535b6e9\",\"ext\": \"jpg\"}]";
   // prepopulatedInputArr: string = "[{\"key\":\"45f25547-3dce-43e7-bf9e-585fe94a08eb\",\"ext\":\"jpg\"}]";
-  prepopulatedInputArr: string = "[{\"key\":\"b70fead2-0068-4d9a-a210-5e2a0ff469ab\",\"ext\":\"pdf\"}]";
+  // prepopulatedInputArr: string = "[{\"key\":\"b70fead2-0068-4d9a-a210-5e2a0ff469ab\",\"ext\":\"pdf\"}]";
   // prepopulatedInputArr: string = "[{\"key\":\"e59d2652-2dc8-4748-956a-3634553736bc\",\"ext\":\"pdf\"}]";
   // prepopulatedInputArr: string = "[{\"key\":\"b70fead2-0068-4d9a-a210-5e2a0ff469ab\",\"ext\":\"pdf\"},{\"key\":\"430f0879-15c3-4fb5-a011-7616f9f696ee\",\"ext\":\"xlsx\"}]";
-  // prepopulatedInputArr: string = "[]";
+  // prepopulatedInputArr: string = "[{\"key\":\"430f0879-15c3-4fb5-a011-7616f9f696ee\",\"ext\":\"xlsx\"}]";
+  prepopulatedInputArr: string = "[]";
 
   
   @property()
@@ -888,6 +889,24 @@ export class SfIUploader extends LitElement {
         }, function (reason: any) {
           // PDF loading error
           console.error(reason);
+        });
+      }else if(this.maximize == "yes"){
+        html += '<div class="d-flex justify-center align-center">';
+        html += '<button class="d-flex justify-center align-center" part="button-icon" id="download-button"><span>Download </span><span class="material-icons ml-10">cloud_download</span></button>'
+        html += '</div>';
+
+        (this._SfUploadContainer as HTMLDivElement).innerHTML = html;
+        (this._SfUploadContainer as HTMLDivElement).style.display = 'flex';
+        (this._SfUploadContainer as HTMLDivElement).querySelector('#download-button')?.addEventListener('click', () => {
+
+          const a = document.createElement("a");
+          a.style.display = "none";
+          a.href = data;
+          a.download = "download_"+new Date().getTime()+"." + ext;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a); 
+  
         });
       }
     }else{

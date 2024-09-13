@@ -46,7 +46,7 @@ const getMessageByDocType = async (docType, apiId, _SfLoader, callbackSuccess, c
     _SfLoader.innerHTML = '';
     if (xhr.status == 200) {
         const jsonRespose = JSON.parse(xhr.responseText);
-        callbackSuccess(jsonRespose.message, jsonRespose.verify);
+        callbackSuccess(jsonRespose.message, jsonRespose.verify, jsonRespose.match);
         return;
     }
     else {
@@ -102,9 +102,12 @@ const getKeyData = async (key, apiId, _SfLoader, callbackSuccess, callbackError,
         body["projectid"] = projectId;
     }
     const xhr = (await prepareXhr(body, url, _SfLoader, authorization));
-    _SfLoader.innerHTML = '';
+    if (_SfLoader != null) {
+        _SfLoader.innerHTML = '';
+    }
     if (xhr.status == 200) {
         const jsonRespose = JSON.parse(xhr.responseText);
+        console.log(jsonRespose);
         callbackSuccess(jsonRespose.ext, jsonRespose.data);
     }
     else {
