@@ -52,6 +52,9 @@ export class SfIUploader extends LitElement {
   maximize: string = "no";
 
   @property()
+  hidepreview: string = "no";
+
+  @property()
   readOnly: boolean = false;
 
   @property()
@@ -725,7 +728,7 @@ export class SfIUploader extends LitElement {
     this.queueRenderPage(this.pageNum, canvas, scale, ctx);
   }
 
-  expandPdfDetail = async (data: any, ext: string) => {
+  expandPdfDetail = async (ext: string, data: string) => {
     let detailHtml = '';
     detailHtml += '<div class="d-flex justify-between align-center m-10" part="details-controls-container">';
       if(this.allowDownload == "yes"){
@@ -809,15 +812,53 @@ export class SfIUploader extends LitElement {
     return cachedJSDfd.promise;
 }
 
-  renderKeyData = async (ext: string, data: string) => {
+  renderMaximize = async (ext: string, data: string) => {
+    if(ext == "png" || ext == "jpg") {
+      const contentType: any = (data.match(/[^:]\w+\/[\w-+\d.]+(?=;|,)/) ?? [""])[0];
+
+      const byteCharacters = atob(data.substr(`data:${contentType};base64,`.length));
+      const byteArrays = [];
+
+      for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
+          const slice = byteCharacters.slice(offset, offset + 1024);
+
+          const byteNumbers = new Array(slice.length);
+          for (let i = 0; i < slice.length; i++) {
+              byteNumbers[i] = slice.charCodeAt(i);
+          }
+
+          const byteArray = new Uint8Array(byteNumbers);
+
+          byteArrays.push(byteArray);
+      }
+      const blob = new Blob(byteArrays, {type: contentType});
+      const blobUrl = URL.createObjectURL(blob);
+
+      window.open(blobUrl, '_blank');
+    }
+  }
+
+  renderDownload = async (ext: string, data: string) => {
+    const a = document.createElement("a");
+    a.style.display = "none";
+    a.href = data;
+    a.download = "download_"+new Date().getTime()+"." + ext;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a); 
+  }
+  
+  renderKeyData = async (ext: string, data: string, hidePreview: boolean = false) => {
 
     var html = '';
-    console.log("key Data", data)
+    console.log("key Data", data, ext, this.mode)
     if(this.mode == "view"){
       if(ext == "png" || ext == "jpg") {
 
         html += '<div class="d-flex justify-center align-center" part="image-container">';
-        html += '<img src="'+data+'" alt="picture" part="image-component" class="mr-10"/>'
+        if(!hidePreview){
+          html += '<img src="'+data+'" alt="picture" part="image-component" class="mr-10"/>'
+        }
         if(this.maximize == "yes"){
           html += '<button id="button-open-in-new-tab" part="button-icon"><span class="material-icons">open_in_new</span></button>'
         }
@@ -826,70 +867,88 @@ export class SfIUploader extends LitElement {
         (this._SfUploadContainer as HTMLDivElement).style.display = 'flex';
         if(this.maximize == "yes"){
           (this._SfUploadContainer.querySelector('#button-open-in-new-tab') as HTMLButtonElement).addEventListener('click',()=>{
-            console.log('opening in new tab')
-            
-            const contentType: any = (data.match(/[^:]\w+\/[\w-+\d.]+(?=;|,)/) ?? [""])[0];
+            if(hidePreview){
+              Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderMaximize, (errMsg: string)=>{this.setError(errMsg);setTimeout(() => {
+                this.clearMessages();
+              }, 3000)}, this.projectId)
+            }else{
+              console.log('opening in new tab')
+              
+              const contentType: any = (data.match(/[^:]\w+\/[\w-+\d.]+(?=;|,)/) ?? [""])[0];
 
-            const byteCharacters = atob(data.substr(`data:${contentType};base64,`.length));
-            const byteArrays = [];
+              const byteCharacters = atob(data.substr(`data:${contentType};base64,`.length));
+              const byteArrays = [];
 
-            for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
-                const slice = byteCharacters.slice(offset, offset + 1024);
+              for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
+                  const slice = byteCharacters.slice(offset, offset + 1024);
 
-                const byteNumbers = new Array(slice.length);
-                for (let i = 0; i < slice.length; i++) {
-                    byteNumbers[i] = slice.charCodeAt(i);
-                }
+                  const byteNumbers = new Array(slice.length);
+                  for (let i = 0; i < slice.length; i++) {
+                      byteNumbers[i] = slice.charCodeAt(i);
+                  }
 
-                const byteArray = new Uint8Array(byteNumbers);
+                  const byteArray = new Uint8Array(byteNumbers);
 
-                byteArrays.push(byteArray);
+                  byteArrays.push(byteArray);
+              }
+              const blob = new Blob(byteArrays, {type: contentType});
+              const blobUrl = URL.createObjectURL(blob);
+
+              window.open(blobUrl, '_blank');
             }
-            const blob = new Blob(byteArrays, {type: contentType});
-            const blobUrl = URL.createObjectURL(blob);
-
-            window.open(blobUrl, '_blank');
             
           })
         }
       }else if(ext == "pdf"){
         html += '<div class="d-flex justify-center align-center" part="pdf-thumbnail-container">';
-        html += '<canvas id="pdf-canvas-thumbnail" class="pdf-canvas-thumbnail", part="pdf-canvas-thumbnail"></canvas>';
+        if(!hidePreview){
+          html += '<canvas id="pdf-canvas-thumbnail" class="pdf-canvas-thumbnail", part="pdf-canvas-thumbnail"></canvas>';
+        }
         if(this.maximize == "yes"){
           html += '<button id="button-expand-pdf" part="button-icon"><span class="material-icons">open_in_new</span></button>';
         }
         html += '</div>';
         (this._SfUploadContainer as HTMLDivElement).innerHTML = html;
+        console.log(html, (this._SfUploadContainer as HTMLDivElement), (this._SfUploadContainer as HTMLDivElement).innerHTML );
         (this._SfUploadContainer as HTMLDivElement).style.display = 'flex';
-        
-        pdfjs.GlobalWorkerOptions.workerSrc = await this.loadWorkerURL("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.6.172/pdf.worker.min.js");
-        const pdfjsLib = pdfjs;
-        
-        // Using DocumentInitParameters object to load binary data.
-        var loadingTask = pdfjsLib.getDocument({data: atob(data.replace("data:application/pdf;base64,",""))});
-        
-        var canvas:any = this._SfUploadContainer.querySelector('#pdf-canvas-thumbnail');
-        var ctx = canvas.getContext('2d');
-        var scale = 0.8;
-        let thisObj = this;
+
         if(this.maximize == "yes"){
           (this._SfUploadContainer.querySelector('#button-expand-pdf') as HTMLButtonElement).addEventListener('click',()=>{
-            this.expandPdfDetail(data, ext)
+            if(hidePreview){
+              Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.expandPdfDetail, (errMsg: string)=>{this.setError(errMsg);setTimeout(() => {
+                this.clearMessages();
+              }, 3000)}, this.projectId)
+            }else{
+              this.expandPdfDetail(ext, data)
+            }
           })
         }
-        loadingTask.promise.then(function(pdf:any) {
-          console.log('PDF loaded');
-          thisObj.pdfDoc = pdf
-          thisObj.pageNum = 1,
-          thisObj.pageRendering = false;
-          thisObj.pageNumPending = null;
-          // thisObj._SfUploadContainer.querySelector('#pdf-page-count').innerHTML = pdf.numPages + ""
-          // thisObj._SfUploadContainer.querySelector('#pdf-controls-container').style.display = (pdf.numPages == 1) ? "none" : "block"
-          thisObj.renderPdfPage(thisObj.pageNum, canvas, scale, ctx)
-        }, function (reason: any) {
-          // PDF loading error
-          console.error(reason);
-        });
+        if(!hidePreview){
+          pdfjs.GlobalWorkerOptions.workerSrc = await this.loadWorkerURL("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.6.172/pdf.worker.min.js");
+          const pdfjsLib = pdfjs;
+          
+          // Using DocumentInitParameters object to load binary data.
+          var loadingTask = pdfjsLib.getDocument({data: atob(data.replace("data:application/pdf;base64,",""))});
+          
+          var canvas:any = this._SfUploadContainer.querySelector('#pdf-canvas-thumbnail');
+          var ctx = canvas.getContext('2d');
+          var scale = 0.8;
+          let thisObj = this;
+          
+          loadingTask.promise.then(function(pdf:any) {
+            console.log('PDF loaded');
+            thisObj.pdfDoc = pdf
+            thisObj.pageNum = 1,
+            thisObj.pageRendering = false;
+            thisObj.pageNumPending = null;
+            // thisObj._SfUploadContainer.querySelector('#pdf-page-count').innerHTML = pdf.numPages + ""
+            // thisObj._SfUploadContainer.querySelector('#pdf-controls-container').style.display = (pdf.numPages == 1) ? "none" : "block"
+            thisObj.renderPdfPage(thisObj.pageNum, canvas, scale, ctx)
+          }, function (reason: any) {
+            // PDF loading error
+            console.error(reason);
+          });
+        }
       }else if(this.maximize == "yes"){
         html += '<div class="d-flex justify-center align-center">';
         html += '<button class="d-flex justify-center align-center" part="button-icon" id="download-button"><span>Download </span><span class="material-icons ml-10">cloud_download</span></button>'
@@ -898,14 +957,19 @@ export class SfIUploader extends LitElement {
         (this._SfUploadContainer as HTMLDivElement).innerHTML = html;
         (this._SfUploadContainer as HTMLDivElement).style.display = 'flex';
         (this._SfUploadContainer as HTMLDivElement).querySelector('#download-button')?.addEventListener('click', () => {
-
-          const a = document.createElement("a");
-          a.style.display = "none";
-          a.href = data;
-          a.download = "download_"+new Date().getTime()+"." + ext;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a); 
+          if(hidePreview){
+            Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderDownload, (errMsg: string)=>{this.setError(errMsg);setTimeout(() => {
+              this.clearMessages();
+            }, 3000)}, this.projectId)
+          }else{
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = data;
+            a.download = "download_"+new Date().getTime()+"." + ext;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a); 
+          }
   
         });
       }
@@ -926,7 +990,7 @@ export class SfIUploader extends LitElement {
 
 
       } else if(ext == "pdf"){
-        this.expandPdfDetail(data, ext)
+        this.expandPdfDetail(ext, data)
         flagSetHtml = false
       } else {
 
@@ -1098,9 +1162,13 @@ export class SfIUploader extends LitElement {
     if(this.mode == "view"){
       console.log("populating view input", this.inputArr, this.projectId)
       if(this.inputArr.length > 0){
-        Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderKeyData, (errMsg: string)=>{this.setError(errMsg);setTimeout(() => {
-          this.clearMessages();
-        }, 3000)}, this.projectId)
+        if(this.hidepreview == "yes"){
+          this.renderKeyData(this.inputArr[0]['ext'],"", true);
+        }else{
+          Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderKeyData, (errMsg: string)=>{this.setError(errMsg);setTimeout(() => {
+            this.clearMessages();
+          }, 3000)}, this.projectId)
+        }
       }
       // for(var i = 0; i < this.inputArr.length; i++){
       //   if(this.inputArr[i].file == null) {
@@ -1252,93 +1320,93 @@ export class SfIUploader extends LitElement {
           }
         }
       }
-    }
-
-    if(!this.readOnly && this.inputArr.length < parseInt(this.max) && this.mode != "view") {
-      htmlStr += '<button id="button-add" part="button" class="mt-10">'+this.newButtonText+'</button>';
-    }
-    if((this._SfUploadContainer as HTMLDivElement) == null){
-      return;
-    }
-    (this._SfUploadContainer as HTMLDivElement).innerHTML = htmlStr;
-
-    (this._SfUploadContainer as HTMLDivElement).querySelector('#button-add')?.addEventListener('click', () => {
-      if(this.current < this.getMax()) {
-        this.current++;
-        this.inputArr.push({})
+    
+      if(!this.readOnly && this.inputArr.length < parseInt(this.max) && this.mode != "view") {
+        htmlStr += '<button id="button-add" part="button" class="mt-10">'+this.newButtonText+'</button>';
       }
-      this.isUploadValid()
-    });
+      if((this._SfUploadContainer as HTMLDivElement) == null){
+        return;
+      }
+      (this._SfUploadContainer as HTMLDivElement).innerHTML = htmlStr;
 
-    for(i = 0; i < this.inputArr.length; i++) {
-
-      (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-'+i)?.addEventListener('click', (ev: any) => {
-        const index = ev.currentTarget.id.split("-")[2];
-        this.inputArr.splice(index, 1)
+      (this._SfUploadContainer as HTMLDivElement).querySelector('#button-add')?.addEventListener('click', () => {
+        if(this.current < this.getMax()) {
+          this.current++;
+          this.inputArr.push({})
+        }
         this.isUploadValid()
       });
 
-      (this._SfUploadContainer as HTMLDivElement).querySelector('#file-'+i)?.addEventListener('change', (ev: any) => {
-        const index = ev.target.id.split("-")[1];
-        const input = (ev.target as HTMLInputElement);
-        this.inputArr[index]['file'] = input.files![0];
-        const ext = input.files![0].name.split(".")[input.files![0].name.split(".").length - 1]
-        if(input.files![0].size > this.maxSize) {
-          this.setError('Maximum allowed file size is ' + (this.maxSize/1024) + ' KB');
-          setTimeout(() => {
-            this.clearMessages();
-            this.inputArr[index] = {};
-          }, 3000);
-          return;
-        }
+      for(i = 0; i < this.inputArr.length; i++) {
 
-        if(!this.getAllowedExtensions().includes(ext.toLowerCase())) {
-          this.setError('This file extension is not allowed');
-          setTimeout(() => {
-            this.clearMessages();
-            this.inputArr[index] = {};
-          }, 3000);
-          return;
-        }
-      });
-      
-      (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-file-'+i)?.addEventListener('click', (ev:any) => {
-        const index = ev.currentTarget.id.split("-")[3];
-        console.log('button clicked', index)
-        this.inputArr[index]['delete'] = true
-      });
-      (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-file-cancel-'+i)?.addEventListener('click', (ev:any) => {
-        const index = ev.currentTarget.id.split("-")[4];
-        this.inputArr[index]['delete'] = false
-      });
-      (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-file-confirm-'+i)?.addEventListener('click', (ev:any) => {
-        const index = ev.currentTarget.id.split("-")[4];
-        console.log("confirming delete", index, this.inputArr[index])
-        this.inputArr.splice(index, 1)
-        this.isUploadValid()
-      });
+        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-'+i)?.addEventListener('click', (ev: any) => {
+          const index = ev.currentTarget.id.split("-")[2];
+          this.inputArr.splice(index, 1)
+          this.isUploadValid()
+        });
 
-      (this._SfUploadContainer as HTMLDivElement).querySelector('#button-cancel-'+i)?.addEventListener('click', (ev: any) => {
-        const index = ev.currentTarget.id.split("-")[2];
-        this.inputArr[index] = "";
-      });
+        (this._SfUploadContainer as HTMLDivElement).querySelector('#file-'+i)?.addEventListener('change', (ev: any) => {
+          const index = ev.target.id.split("-")[1];
+          const input = (ev.target as HTMLInputElement);
+          this.inputArr[index]['file'] = input.files![0];
+          const ext = input.files![0].name.split(".")[input.files![0].name.split(".").length - 1]
+          if(input.files![0].size > this.maxSize) {
+            this.setError('Maximum allowed file size is ' + (this.maxSize/1024) + ' KB');
+            setTimeout(() => {
+              this.clearMessages();
+              this.inputArr[index] = {};
+            }, 3000);
+            return;
+          }
 
-      (this._SfUploadContainer as HTMLDivElement).querySelector('#button-upload-'+i)?.addEventListener('click', (ev: any) => {
-        const index = ev.currentTarget.id.split("-")[2];
-        for(var i = 0; i < this.inputArr.length; i++) {
-          this.inputArr[i]["progress"] = true;
-        }
+          if(!this.getAllowedExtensions().includes(ext.toLowerCase())) {
+            this.setError('This file extension is not allowed');
+            setTimeout(() => {
+              this.clearMessages();
+              this.inputArr[index] = {};
+            }, 3000);
+            return;
+          }
+        });
         
-        this.beginUploadJob(index, this.inputArr[index]['file']);
-      });
+        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-file-'+i)?.addEventListener('click', (ev:any) => {
+          const index = ev.currentTarget.id.split("-")[3];
+          console.log('button clicked', index)
+          this.inputArr[index]['delete'] = true
+        });
+        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-file-cancel-'+i)?.addEventListener('click', (ev:any) => {
+          const index = ev.currentTarget.id.split("-")[4];
+          this.inputArr[index]['delete'] = false
+        });
+        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-file-confirm-'+i)?.addEventListener('click', (ev:any) => {
+          const index = ev.currentTarget.id.split("-")[4];
+          console.log("confirming delete", index, this.inputArr[index])
+          this.inputArr.splice(index, 1)
+          this.isUploadValid()
+        });
 
-      (this._SfUploadContainer as HTMLDivElement).querySelector('#button-open-'+i)?.addEventListener('click', (ev: any) => {
-        const index = ev.currentTarget.id.split("-")[2];
-        Api.getKeyData(this.inputArr[index]['key'], this.apiId, this._SfLoader, this.renderKeyData, (errMsg: string)=>{this.setError(errMsg);setTimeout(() => {
-          this.clearMessages();
-        }, 3000)}, this.projectId)
-      });
+        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-cancel-'+i)?.addEventListener('click', (ev: any) => {
+          const index = ev.currentTarget.id.split("-")[2];
+          this.inputArr[index] = "";
+        });
 
+        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-upload-'+i)?.addEventListener('click', (ev: any) => {
+          const index = ev.currentTarget.id.split("-")[2];
+          for(var i = 0; i < this.inputArr.length; i++) {
+            this.inputArr[i]["progress"] = true;
+          }
+          
+          this.beginUploadJob(index, this.inputArr[index]['file']);
+        });
+
+        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-open-'+i)?.addEventListener('click', (ev: any) => {
+          const index = ev.currentTarget.id.split("-")[2];
+          Api.getKeyData(this.inputArr[index]['key'], this.apiId, this._SfLoader, this.renderKeyData, (errMsg: string)=>{this.setError(errMsg);setTimeout(() => {
+            this.clearMessages();
+          }, 3000)}, this.projectId)
+        });
+
+      }
     }
 
   }
@@ -1475,6 +1543,9 @@ export class SfIUploader extends LitElement {
           <div id="detail-container" class="hide d-flex flex-col" part="detail-container">
 
           </div>
+        </div>
+        <div class="d-flex justify-center">
+          <div class="loader-element"></div>
         </div>
       `;
     }else{
