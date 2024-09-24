@@ -1532,22 +1532,50 @@ export class SfIUploader extends LitElement {
   
   override render() {
     if(this.mode == "view"){
-      return html`
-            
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-        <div class="SfIUploaderC">
-          <div id="upload-container">
+      if(this.hidepreview == "yes"){
+        return html`
+              
+          <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+          <div class="SfIUploaderC">
+            <div id="upload-container">
 
-          </div>
-          <div id="detail-container" class="hide d-flex flex-col" part="detail-container">
+            </div>
+            <div id="detail-container" class="hide d-flex flex-col" part="detail-container">
 
+            </div>
           </div>
-        </div>
-        <div class="d-flex justify-center">
-          <div class="loader-element"></div>
-        </div>
-      `;
+          <div class="d-flex justify-between">
+              <div class="lb"></div>
+              <div>
+                <div class="div-row-error div-row-submit gone">
+                  <div part="errormsg" class="div-row-error-message"></div>
+                </div>
+                <div class="div-row-success div-row-submit gone">
+                  <div part="successmsg" class="div-row-success-message"></div>
+                </div>
+              </div>
+              <div class="rb"></div>
+          </div>
+          <div class="d-flex justify-center">
+            <div class="loader-element"></div>
+          </div>
+        `;
+      }else{
+        return html`
+              
+          <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+          <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+          <div class="SfIUploaderC">
+            <div id="upload-container">
+
+            </div>
+            <div id="detail-container" class="hide d-flex flex-col" part="detail-container">
+
+            </div>
+          </div>
+        `;
+      }
     }else{
       return html`
             
