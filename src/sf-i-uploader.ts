@@ -42,7 +42,8 @@ export class SfIUploader extends LitElement {
   // prepopulatedInputArr: string = "[{\"key\":\"e59d2652-2dc8-4748-956a-3634553736bc\",\"ext\":\"pdf\"}]";
   // prepopulatedInputArr: string = "[{\"key\":\"b70fead2-0068-4d9a-a210-5e2a0ff469ab\",\"ext\":\"pdf\"},{\"key\":\"430f0879-15c3-4fb5-a011-7616f9f696ee\",\"ext\":\"xlsx\"}]";
   // prepopulatedInputArr: string = "[{\"key\":\"430f0879-15c3-4fb5-a011-7616f9f696ee\",\"ext\":\"xlsx\"}]";
-  prepopulatedInputArr: string = "[]";
+  prepopulatedInputArr: string = "[{\"key\":\"3deb2dc2-dddc-4560-a5f2-d4a137429e59\",\"file\":{\"name\":\"3deb2dc2-dddc-4560-a5f2-d4a137429e59.pdf\",\"ext\":\"pdf\"},\"ext\":\"pdf\"},{\"key\":\"2050925c-db78-4a6c-ad75-cfa898fc64b2\",\"file\":{\"name\":\"2050925c-db78-4a6c-ad75-cfa898fc64b2.pdf\",\"ext\":\"pdf\"},\"ext\":\"pdf\"}]";
+  // prepopulatedInputArr: string = "[]";
 
   
   @property()
@@ -1098,6 +1099,8 @@ export class SfIUploader extends LitElement {
   }
 
   beginUploadJob = (fileIndex: any, file: any) => {
+    const event2 = new CustomEvent('uploadStarted', {detail: {}, bubbles: true, composed: true});
+    this.dispatchEvent(event2);
 
     const fileName = file.name;
     const ext = fileName.split(".")[file.name.split(".").length - 1].toLowerCase();
@@ -1277,9 +1280,12 @@ export class SfIUploader extends LitElement {
               htmlStr += '<button id="button-delete-file-cancel-'+i+'" part="button-icon" class="mr-10 button-icon"><span class="material-icons">close</span></button>'
               htmlStr += '<button id="button-delete-file-confirm-'+i+'" part="button-icon" class="button-icon"><span class="material-icons">delete</span><span class="material-icons">done</span></button>'
             }else{
-              if(this.extract.toLowerCase() != "yes" && this.getExtractableExtensions().indexOf(ext) < 0){
+              console.log('delete button',this.extract.toLowerCase(), this.getExtractableExtensions().indexOf(ext) )
+              // if(this.extract.toLowerCase() != "yes" && this.getExtractableExtensions().indexOf(ext) < 0){
+              if(this.extract.toLowerCase() != "yes"){
                 htmlStr += '<button id="button-delete-file-'+i+'" part="button-icon" class="mr-10 button-icon"><span class="material-icons">delete</span></button>'
-                
+              }else if(this.getExtractableExtensions().indexOf(ext) < 0){
+                htmlStr += '<button id="button-delete-file-'+i+'" part="button-icon" class="mr-10 button-icon"><span class="material-icons">delete</span></button>'
               }
               htmlStr += '<button id="button-open-'+i+'" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
             }
