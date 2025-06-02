@@ -1,7 +1,7 @@
 {
   "name": "sf-i-uploader",
   "private": false,
-  "version": "1.0.103",
+  "version": "1.0.118",
   "description": "Superflows Navigation Component",
   "main": "sf-i-uploader.js",
   "module": "sf-i-uploader.js",
@@ -52,7 +52,7 @@
   "repository": "superflows-dev/sf-i-uploader",
   "dependencies": {
     "fs": "^0.0.1-security",
-    "lit": "^2.2.4",
+    "lit": "^2.8.0",
     "sf-i-select": "^1.0.51",
     "sf-i-sub-select": "^1.0.68",
     "sinon": "^15.0.1"

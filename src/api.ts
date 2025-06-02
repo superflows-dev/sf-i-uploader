@@ -33,11 +33,11 @@ const uploadBlock = async (key: string, block: string, data: string, apiId: stri
   }
 
 
-const uploadMeta = async (key: string, ext: string, numblocks: string, apiId: string, _SfLoader: any, callbackError: any, projectId: string) => {
+const uploadMeta = async (key: string, filename:string,  ext: string, numblocks: string, apiId: string, _SfLoader: any, callbackError: any, projectId: string) => {
 
     let url = "https://"+apiId+".execute-api.us-east-1.amazonaws.com/test/upload";
 
-    const body: any = { "type": "meta", "key": key, "ext": ext, "numblocks": numblocks} 
+    const body: any = { "type": "meta", "key": key, "ext": ext, "numblocks": numblocks, "filename": filename} 
     const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
     if(projectId.length > 0) {
       body["projectid"] = projectId
@@ -158,8 +158,35 @@ const getKeyData = async (key: string, apiId: string, _SfLoader: any, callbackSu
 
 }
 
+const largeFileWarning = async (fileSize: string, apiId: string, _SfLoader: any, callbackError: any, projectId: string) => {
+
+    let url = "https://"+apiId+".execute-api.us-east-1.amazonaws.com/test/largefilewarning";
+
+    const body: any = { "filesize": fileSize} 
+    const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
+    if(projectId.length > 0) {
+      body["projectid"] = projectId;
+    }
+    const xhr : any = (await prepareXhr(body, url, _SfLoader, authorization)) as any;
+    if(_SfLoader != null){
+      _SfLoader.innerHTML = '';
+    }
+    
+    if(xhr.status == 200) {
+
+      const jsonRespose = JSON.parse(xhr.responseText);
+      console.log(jsonRespose)
+      // callbackSuccess('Sent successfully');
+      
+    } else {
+      const jsonRespose = JSON.parse(xhr.responseText);
+      callbackError(jsonRespose.error);
+    }
+
+}
+
 const exportFunctions = {
-    uploadBlock, uploadMeta, getExtractStatus, getExtract, getKeyData, prepareXhr, getMessageByDocType
+    uploadBlock, uploadMeta, getExtractStatus, getExtract, getKeyData, prepareXhr, getMessageByDocType, largeFileWarning
  };
  
  export default exportFunctions;

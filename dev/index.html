@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html>
   <head>
     <meta charset="utf-8" />
@@ -15,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@200;300;400;600&display=swap" rel="stylesheet">
     <script type="module">
-        import {SfIElasticText} from 'https://unpkg.com/sf-i-elastic-text@1.0.8/sf-i-elastic-text.js?module';
+        import {SfIElasticText} from 'https://esm.run/sf-i-elastic-text@1.0.16/sf-i-elastic-text.js';
     </script>
     <style>
       
@@ -304,14 +303,18 @@
     </style>
   </head>
   <body>
+    <sf-i-uploader id="uploader" max="10" apiid="1peg5170d3" allowedextensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;,&quot;xls&quot;,&quot;xlsx&quot;,&quot;doc&quot;,&quot;docx&quot;]" extract="yes" projectid="63d20443-b9cc-4a86-b39d-bf81c1c93ba5" maxsize="31457280" allowdownload="yes"></sf-i-uploader>
     <!-- <sf-i-uploader class="summary-report-doc" max="10" apiid="1peg5170d3" allowedextensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;,&quot;xls&quot;,&quot;xlsx&quot;,&quot;doc&quot;,&quot;docx&quot;]" prepopulatedinputarr="[{&quot;key&quot;:&quot;430f0879-15c3-4fb5-a011-7616f9f696ee&quot;,&quot;ext&quot;:&quot;xls&quot;}]" projectid="41ab3c86-ccc0-4c0e-8e31-cd079a07a710" extract="no" maximize="yes" mode="view"></sf-i-uploader> -->
     <!-- <sf-i-uploader class="summary-report-doc" max="10" apiid="1peg5170d3" allowedextensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;,&quot;xls&quot;,&quot;xlsx&quot;,&quot;doc&quot;,&quot;docx&quot;]" prepopulatedinputarr="[{&quot;key&quot;:&quot;83727647-fced-49f3-a9e2-41d630bda3d0&quot;,&quot;ext&quot;:&quot;pdf&quot;}]" projectid="5c073644-5dce-4d8f-b82e-2bc2def2390f " extract="no" mode="view" maximize="yes" hidepreview="yes"></sf-i-uploader> -->
-    <sf-i-uploader id="sf-i-attachment" max="10" apiid="1peg5170d3" allowedextensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;]" extract="no" style="display: block;"></sf-i-uploader>
+    <!-- <sf-i-uploader class="event-attachment" max="10" apiid="1peg5170d3" allowedextensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;,&quot;xls&quot;,&quot;xlsx&quot;,&quot;doc&quot;,&quot;docx&quot;]" prepopulatedinputarr="[{&quot;key&quot;:&quot;82d0ed2f-92ce-4d7b-af63-f02f35e774bc&quot;,&quot;ext&quot;:&quot;pdf&quot;}]" projectid="41ab3c86-ccc0-4c0e-8e31-cd079a07a710 " extract="no" mode="view" maximize="yes" hidepreview="yes" displaydetail="yes"></sf-i-uploader> -->
+    <!-- <sf-i-uploader class="event-attachment" max="10" apiid="1peg5170d3" allowedextensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;,&quot;xls&quot;,&quot;xlsx&quot;,&quot;doc&quot;,&quot;docx&quot;]" prepopulatedinputarr="[{&quot;key&quot;:&quot;b70fead2-0068-4d9a-a210-5e2a0ff469ab&quot;,&quot;ext&quot;:&quot;pdf&quot;}]" projectid="41ab3c86-ccc0-4c0e-8e31-cd079a07a710" extract="no" mode="view" maximize="yes" hidepreview="yes" displaydetail="yes"></sf-i-uploader> -->
+    <!-- <sf-i-uploader id="sf-i-attachment" max="10" apiid="6lhthuii2f" allowedextensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;]" extract="yes" style="display: block;"></sf-i-uploader> -->
+    <!-- <sf-i-uploader id="sf-i-attachment" max="10" apiid="qegqubqm14" allowedextensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;]" extract="no" style="display: block;"></sf-i-uploader> -->
     <!-- <sf-i-uploader apiid="1peg5170d3" projectid="41ab3c86-ccc0-4c0e-8e31-cd079a07a710" prepopulatedinputarr="[{&quot;jobId&quot;:&quot;1daa8e6536aa1d7d0d7aa09004c66a57d4933d9b46d4ffcf6663781e8777be17&quot;,&quot;key&quot;:&quot;476a7c96-a18f-40c8-9974-4710d91e7f0c&quot;,&quot;ext&quot;:&quot;png&quot;}]" exportparts="detail-container:uploader-detail-container, errmsg:uploader-errmsg, successmsg:uploader-successmsg, sf-upload-message:uploader:sf-upload-message, sf-upload-submessage: uploader-sf-upload-submessage, doctype-verify-badge: uploader-doctype-verify-badge, details-controls-container: uploader-details-controls-container, button-icon: uploader-button-icon, pdf-controls-container: uploader-pdf-controls-container, pdf-pages: uploader-pdf-pages, pdf-page-num: uploader-pdf-page-num, pdf-page-count: uploader-pdf-page-count, pdf-canvas: uploader-pdf-canvas, image-container: uploader-image-container, image-component: uploader-image-component, pdf-thumbnail-container: uploader-pdf-thumbnail-container, pdf-canvas-thumbnail: uploader-pdf-canvas-thumbnail, sf-uploader-download-message: uploader-sf-uploader-download-message, input: uploader-input, upload-buttons-container: uploader-upload-buttons-container, doctype-badge: uploader-doctype-badge, upload-status: uploader-upload-status, ext-badge:uploader-ext-badge, extracted-meta: uploader-extracted-meta, extracted-text-chip: uploader-extracted-text-chip, extracted-text-chip-parsed: uploader-extracted-text-chip-parsed, extracted-text-chip-failed: uploader-extracted-text-chip-failed, matches-title: uploader-matches-title, matches:uploader-matches, extracted-title: uploader-extracted-title, extracted-text: uploader-extracted-text, disclaimer-message-container: uploader-disclaimer-message-container, message-container: uploader-message-container, button: uploader-button" class="reporting-sf-i-uploader" part="input-sf-i-uploader" id="history-doc-uploader-0" max="1" apiid="1peg5170d3" mode="view"></sf-i-uploader> -->
-    <!-- <sf-i-uploader id="uploader" max="10" apiid="1peg5170d3" allowedextensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;]" extract="yes" projectid="5c073644-5dce-4d8f-b82e-2bc2def2390f" maxSize="5242880"></sf-i-uploader> -->
+    <!-- <sf-i-uploader id="uploader" max="10" apiid="1peg5170d3" allowedextensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;]" extract="yes" projectid="5c073644-5dce-4d8f-b82e-2bc2def2390f" maxSize="31457280"></sf-i-uploader> -->
     <!-- <sf-i-uploader id="sf-i-logo" max="10" apiid="1peg5170d3" allowedextensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;]" extract="no" mandatory="" mode="view" maximize="yes"></sf-i-uploader> -->
     <!-- <sf-i-uploader id="sf-i-logo" max="10" apiid="1peg5170d3" allowedextensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;]" extract="no" mode="view" ></sf-i-uploader> -->
-    <!-- <sf-i-uploader id="uploader" max="10" apiid="1peg5170d3" allowedextensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;,&quot;xls&quot;,&quot;xlsx&quot;,&quot;doc&quot;,&quot;docx&quot;]" docType="aadhar" extract="no" allowDownload="yes" projectid="41ab3c86-ccc0-4c0e-8e31-cd079a07a710" maxSize="5242880"></sf-i-uploader> -->
+    <!-- <sf-i-uploader id="uploader" max="10" apiid="1peg5170d3" allowedextensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;,&quot;xls&quot;,&quot;xlsx&quot;,&quot;doc&quot;,&quot;docx&quot;]" docType="aadhar" extract="no" allowDownload="yes" projectid="41ab3c86-ccc0-4c0e-8e31-cd079a07a710" maxSize="31457280"></sf-i-uploader> -->
 <!-- 
     <sf-i-uploader max="1" apiId="1peg5170d3" allowedExtensions="[&quot;jpg&quot;,&quot;png&quot;,&quot;pdf&quot;]" extract="yes" dataPassthrough="test123" callbackUrlHost="eoma59bzxizzjlf.m.pipedream.net" callbackUrlPath="/aadhar" docType="aadhar" newButtonText="Scan Now" maxSize="10000"></sf-i-uploader></sf-i-uploader>
      -->
