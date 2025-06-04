@@ -17,11 +17,15 @@ import { LitElement, PropertyValueMap } from 'lit';
  */
 export declare class SfIUploader extends LitElement {
     prepopulatedInputArr: string;
+    mode: string;
+    maximize: string;
+    hidepreview: string;
     readOnly: boolean;
     max: string;
     dataPassthrough: string;
     callbackUrlHost: string;
     callbackUrlPath: string;
+    displayDetail: string;
     getMax: () => number;
     projectId: string;
     maxSize: number;
@@ -29,23 +33,52 @@ export declare class SfIUploader extends LitElement {
     extract: string;
     newButtonText: string;
     allowedExtensions: string;
+    extractableExtensions: string;
     extractJobId: string;
     docType: string;
+    chunkSize: number;
+    allowDownload: string;
     getAllowedExtensions: () => any;
+    getExtractableExtensions: () => any;
     selectedValues: () => ({
         arrWords: any;
         arrWordsMeta: any;
         jobId: any;
+        filename: any;
         key: any;
         ext: any;
     } | {
         jobId: any;
+        filename: any;
         key: any;
         ext: any;
         arrWords?: undefined;
         arrWordsMeta?: undefined;
     } | {
         key: any;
+        filename: any;
+        ext: any;
+        arrWords?: undefined;
+        arrWordsMeta?: undefined;
+        jobId?: undefined;
+    })[];
+    selectedTexts: () => ({
+        arrWords: any;
+        arrWordsMeta: any;
+        jobId: any;
+        filename: any;
+        key: any;
+        ext: any;
+    } | {
+        jobId: any;
+        filename: any;
+        key: any;
+        ext: any;
+        arrWords?: undefined;
+        arrWordsMeta?: undefined;
+    } | {
+        key: any;
+        filename: any;
         ext: any;
         arrWords?: undefined;
         arrWordsMeta?: undefined;
@@ -59,8 +92,10 @@ export declare class SfIUploader extends LitElement {
     current: number;
     arrWords: any;
     arrWordsMeta: any;
-    documentParsed: string;
-    possibleMatches: Array<string>;
+    documentParsed: Array<string>;
+    possibleMatches: Array<Array<string>>;
+    matchArr: Array<Array<string>>;
+    uploadValid: boolean;
     flow: string;
     static styles: import("lit").CSSResult;
     _SfRowError: any;
@@ -72,15 +107,28 @@ export declare class SfIUploader extends LitElement {
     _SfDetailContainer: any;
     _SfMessageContainer: any;
     _SfButtonAdd: any;
+    pageNum: number;
+    pageRendering: boolean;
+    pageNumPending: any;
+    pdfDoc: any;
     clearMessages: () => void;
     setError: (msg: string) => void;
     setSuccess: (msg: string) => void;
     uploadProgressUpdater: (element: HTMLElement | null, value: string) => void;
-    renderMessageData: (message: string, verify: [string]) => void;
-    renderKeyData: (ext: string, data: string) => void;
+    renderMessageData: (message: string, verify: [string], match: [string]) => void;
+    renderPdfPage: (num: number, canvas: any, scale: any, ctx: any) => void;
+    queueRenderPage: (num: number, canvas: any, scale: any, ctx: any) => void;
+    onPrevPage: (canvas: any, scale: any, ctx: any) => void;
+    onNextPage: (canvas: any, scale: any, ctx: any) => void;
+    expandPdfDetail: (ext: string, data: string, fromMaximize?: boolean) => Promise<void>;
+    loadWorkerURL: (url: string) => Promise<any>;
+    renderMaximize: (ext: string, data: string) => Promise<void>;
+    renderDownload: (ext: string, data: string) => Promise<void>;
+    renderKeyData: (ext: string, data: string, hidePreview?: boolean) => Promise<void>;
     chunkify: (base64String: string) => RegExpMatchArray | null;
     executeExtract: (jobId: string) => Promise<void>;
-    processExtract: (key: string, fileIndex: string) => Promise<any>;
+    processExtract: (key: string, fileIndex: any) => Promise<any>;
+    setErrorMaliciousContent: (msg: string, fileIndex: any) => void;
     executeAndUpdateExtract: (jobId: string, fileIndex: number) => Promise<void>;
     beginUploadJob: (fileIndex: any, file: any) => void;
     clearUploads: () => void;
@@ -90,6 +138,7 @@ export declare class SfIUploader extends LitElement {
     initListeners: () => void;
     prepopulateInputs: () => void;
     loadMode: () => Promise<void>;
+    isUploadValid: () => Promise<void>;
     constructor();
     protected firstUpdated(_changedProperties: PropertyValueMap<any> | Map<PropertyKey, unknown>): void;
     connectedCallback(): void;

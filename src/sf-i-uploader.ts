@@ -43,6 +43,7 @@ export class SfIUploader extends LitElement {
   // prepopulatedInputArr: string = "[{\"key\":\"b70fead2-0068-4d9a-a210-5e2a0ff469ab\",\"ext\":\"pdf\"},{\"key\":\"430f0879-15c3-4fb5-a011-7616f9f696ee\",\"ext\":\"xlsx\"}]";
   // prepopulatedInputArr: string = "[{\"filename\":\"logo.png\",\"key\":\"5e850fa4-19de-4ad0-bcd1-fe7e8d9335d5\",\"ext\":\"png\"}]";
   // prepopulatedInputArr: string = "[{\"key\":\"3deb2dc2-dddc-4560-a5f2-d4a137429e59\",\"file\":{\"name\":\"3deb2dc2-dddc-4560-a5f2-d4a137429e59.pdf\",\"ext\":\"pdf\"},\"ext\":\"pdf\"},{\"key\":\"2050925c-db78-4a6c-ad75-cfa898fc64b2\",\"file\":{\"name\":\"2050925c-db78-4a6c-ad75-cfa898fc64b2.pdf\",\"ext\":\"pdf\"},\"ext\":\"pdf\"}]";
+  // prepopulatedInputArr: string = "[{\"arrWords\":[],\"arrWordsMeta\":{\"PAGE\":1},\"jobId\":\"1dc1f5ad1d6d9b85e4b474b15725d4e7f8ed4beeea173bdb3988b9563bee2521\",\"key\":\"6b9ec22d-20d0-4d2c-b92c-748a0f0bc8ff\",\"ext\":\"jpg\"}]";
   prepopulatedInputArr: string = "[]";
 
   
@@ -57,6 +58,7 @@ export class SfIUploader extends LitElement {
 
   @property({type: Boolean})
   readOnly: boolean = false;
+  // readOnly: boolean = true;
 
   @property()
   max: string = "1";
@@ -1263,7 +1265,9 @@ export class SfIUploader extends LitElement {
             htmlStr += '<input id="file-'+i+'" type="file" />';
             htmlStr += '<div class="d-flex align-center justify-between flex-wrap" part="upload-buttons-container">';
             htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>')
-            htmlStr += '<button id="button-delete-'+i+'" part="button-icon"><span class="material-icons">delete</span></button>';
+            if(!this.readOnly){
+              htmlStr += '<button id="button-delete-'+i+'" part="button-icon"><span class="material-icons">delete</span></button>';
+            }
             htmlStr += '</div>';
 
           } else if (this.inputArr[i]["arrWords"] != null) {
@@ -1281,7 +1285,9 @@ export class SfIUploader extends LitElement {
                   htmlStr += '<button id="button-delete-file-cancel-'+i+'" part="button-icon" class="button-icon"><span class="material-icons">close</span></button>'
                   htmlStr += '<button id="button-delete-file-confirm-'+i+'" part="button-icon" class="button-icon"><span class="material-icons">delete</span><span class="material-icons">done</span></button>'
                 }else{
-                  htmlStr += '<button id="button-delete-file-'+i+'" part="button-icon" class="button-icon"><span class="material-icons">delete</span></button>'
+                  if(!this.readOnly){
+                    htmlStr += '<button id="button-delete-file-'+i+'" part="button-icon" class="button-icon"><span class="material-icons">delete</span></button>'
+                  }
                   htmlStr += '<button id="button-open-'+i+'" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
                 }
               htmlStr += '</div>';

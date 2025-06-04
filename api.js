@@ -22,9 +22,9 @@ const uploadBlock = async (key, block, data, apiId, _SfLoader, callbackError, pr
         callbackError(jsonRespose.error);
     }
 };
-const uploadMeta = async (key, ext, numblocks, apiId, _SfLoader, callbackError, projectId) => {
+const uploadMeta = async (key, filename, ext, numblocks, apiId, _SfLoader, callbackError, projectId) => {
     let url = "https://" + apiId + ".execute-api.us-east-1.amazonaws.com/test/upload";
-    const body = { "type": "meta", "key": key, "ext": ext, "numblocks": numblocks };
+    const body = { "type": "meta", "key": key, "ext": ext, "numblocks": numblocks, "filename": filename };
     const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
     if (projectId.length > 0) {
         body["projectid"] = projectId;
@@ -115,8 +115,29 @@ const getKeyData = async (key, apiId, _SfLoader, callbackSuccess, callbackError,
         callbackError(jsonRespose.error);
     }
 };
+const largeFileWarning = async (fileSize, apiId, _SfLoader, callbackError, projectId) => {
+    let url = "https://" + apiId + ".execute-api.us-east-1.amazonaws.com/test/largefilewarning";
+    const body = { "filesize": fileSize };
+    const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
+    if (projectId.length > 0) {
+        body["projectid"] = projectId;
+    }
+    const xhr = (await prepareXhr(body, url, _SfLoader, authorization));
+    if (_SfLoader != null) {
+        _SfLoader.innerHTML = '';
+    }
+    if (xhr.status == 200) {
+        const jsonRespose = JSON.parse(xhr.responseText);
+        console.log(jsonRespose);
+        // callbackSuccess('Sent successfully');
+    }
+    else {
+        const jsonRespose = JSON.parse(xhr.responseText);
+        callbackError(jsonRespose.error);
+    }
+};
 const exportFunctions = {
-    uploadBlock, uploadMeta, getExtractStatus, getExtract, getKeyData, prepareXhr, getMessageByDocType
+    uploadBlock, uploadMeta, getExtractStatus, getExtract, getKeyData, prepareXhr, getMessageByDocType, largeFileWarning
 };
 export default exportFunctions;
 //# sourceMappingURL=api.js.map
