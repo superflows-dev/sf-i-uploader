@@ -5,11 +5,13 @@
  */
 
 
-import {LitElement, html, css, PropertyValueMap} from 'lit';
-import {customElement, query, property} from 'lit/decorators.js';
+import { LitElement, html, css, PropertyValueMap } from 'lit';
+import { customElement, query, property } from 'lit/decorators.js';
 import Util from './util';
 import Api from './api';
-import pdfjs from '@bundled-es-modules/pdfjs-dist';
+/* eslint-disable import/no-default-export */
+import pdfjs from '@bundled-es-modules/pdfjs-dist';//eslint-disable import/no-default-export
+// import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
 
 // pdfjs.GlobalWorkerOptions.workerSrc =
 //   '/node_modules/@bundled-es-modules/pdfjs-dist/build/pdf.worker.min.js';
@@ -34,7 +36,7 @@ DB: partitionKey, rangeKey, values
  */
 @customElement('sf-i-uploader')
 export class SfIUploader extends LitElement {
-  
+
   @property()
   // prepopulatedInputArr: string = "[{\"key\":\"2c39a366-1532-49a1-891e-bdcca8d5d215\",\"ext\": \"jpg\"},{\"key\": \"730e310f-5ae6-4641-a2af-eae3a535b6e9\",\"ext\": \"jpg\"}]";
   // prepopulatedInputArr: string = "[{\"key\":\"45f25547-3dce-43e7-bf9e-585fe94a08eb\",\"ext\":\"jpg\"}]";
@@ -44,9 +46,10 @@ export class SfIUploader extends LitElement {
   // prepopulatedInputArr: string = "[{\"filename\":\"logo.png\",\"key\":\"5e850fa4-19de-4ad0-bcd1-fe7e8d9335d5\",\"ext\":\"png\"}]";
   // prepopulatedInputArr: string = "[{\"key\":\"3deb2dc2-dddc-4560-a5f2-d4a137429e59\",\"file\":{\"name\":\"3deb2dc2-dddc-4560-a5f2-d4a137429e59.pdf\",\"ext\":\"pdf\"},\"ext\":\"pdf\"},{\"key\":\"2050925c-db78-4a6c-ad75-cfa898fc64b2\",\"file\":{\"name\":\"2050925c-db78-4a6c-ad75-cfa898fc64b2.pdf\",\"ext\":\"pdf\"},\"ext\":\"pdf\"}]";
   // prepopulatedInputArr: string = "[{\"arrWords\":[],\"arrWordsMeta\":{\"PAGE\":1},\"jobId\":\"1dc1f5ad1d6d9b85e4b474b15725d4e7f8ed4beeea173bdb3988b9563bee2521\",\"key\":\"6b9ec22d-20d0-4d2c-b92c-748a0f0bc8ff\",\"ext\":\"jpg\"}]";
+  // prepopulatedInputArr: string = "[{\"key\":\"9ab1ac91-60cc-4089-8c8e-64c5f5a2b8c3\",\"filename\":\"Business Continuity Policy.pdf\",\"ext\":\"pdf\"}]";
   prepopulatedInputArr: string = "[]";
 
-  
+
   @property()
   mode: string = "edit";
 
@@ -56,7 +59,7 @@ export class SfIUploader extends LitElement {
   @property()
   hidepreview: string = "no";
 
-  @property({type: Boolean})
+  @property({ type: Boolean })
   readOnly: boolean = false;
   // readOnly: boolean = true;
 
@@ -85,11 +88,10 @@ export class SfIUploader extends LitElement {
 
   }
 
-
   @property()
   projectId: string = "";
 
-  @property({type: Number})
+  @property({ type: Number })
   maxSize: number = 512000;
 
   @property()
@@ -103,7 +105,7 @@ export class SfIUploader extends LitElement {
 
   @property()
   allowedExtensions: string = "[\"jpg\", \"png\", \"pdf\"]";
-  
+
   @property()
   extractableExtensions: string = "[\"jpg\", \"png\", \"pdf\"]";
 
@@ -113,11 +115,14 @@ export class SfIUploader extends LitElement {
   @property()
   docType: string = "";
 
-  @property({type: Number})
+  @property({ type: Number })
   chunkSize: number = 900000;
 
   @property()
   allowDownload: string = "no";
+
+  @property()
+  emailcontent: string = "";
 
   getAllowedExtensions = () => {
     return JSON.parse(this.allowedExtensions)
@@ -134,35 +139,35 @@ export class SfIUploader extends LitElement {
   selectedValues = () => {
     const values = [];
 
-    for(var i = 0; i < this.inputArr.length; i++) {
-      if(this.inputArr[i]['key'] != null) {
+    for (var i = 0; i < this.inputArr.length; i++) {
+      if (this.inputArr[i]['key'] != null) {
 
-        if(this.inputArr[i]['arrWords'] != null) {
+        if (this.inputArr[i]['arrWords'] != null) {
           values.push({
             arrWords: this.inputArr[i]['arrWords'],
             arrWordsMeta: this.inputArr[i]['arrWordsMeta'],
             jobId: this.inputArr[i]['jobId'],
-            filename: this.inputArr[i]['filename'],
+            filename: this.inputArr[i]['file']['name'],
             key: this.inputArr[i]['key'],
             ext: this.inputArr[i]['ext']
           })
-        } else if(this.inputArr[i]['jobId'] != null) {
+        } else if (this.inputArr[i]['jobId'] != null) {
           values.push({
             jobId: this.inputArr[i]['jobId'],
-            filename: this.inputArr[i]['filename'],
+            filename: this.inputArr[i]['file']['name'],
             key: this.inputArr[i]['key'],
             ext: this.inputArr[i]['ext']
           })
-        } else if(this.inputArr[i]['ext'] != null) {
+        } else if (this.inputArr[i]['ext'] != null) {
           values.push({
             key: this.inputArr[i]['key'],
-            filename: this.inputArr[i]['filename'],
+            filename: this.inputArr[i]['file']['name'],
             ext: this.inputArr[i]['ext']
           })
         } else {
           values.push({
             key: this.inputArr[i]['key'],
-            filename: this.inputArr[i]['filename'],
+            filename: this.inputArr[i]['file']['name'],
             ext: this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1]
           })
         }
@@ -175,35 +180,35 @@ export class SfIUploader extends LitElement {
   selectedTexts = () => {
     const values = [];
 
-    for(var i = 0; i < this.inputArr.length; i++) {
-      if(this.inputArr[i]['key'] != null) {
+    for (var i = 0; i < this.inputArr.length; i++) {
+      if (this.inputArr[i]['key'] != null) {
 
-        if(this.inputArr[i]['arrWords'] != null) {
+        if (this.inputArr[i]['arrWords'] != null) {
           values.push({
             arrWords: this.inputArr[i]['arrWords'],
             arrWordsMeta: this.inputArr[i]['arrWordsMeta'],
             jobId: this.inputArr[i]['jobId'],
-            filename: this.inputArr[i]['filename'],
+            filename: this.inputArr[i]['file']['name'],
             key: this.inputArr[i]['key'],
             ext: this.inputArr[i]['ext']
           })
-        } else if(this.inputArr[i]['jobId'] != null) {
+        } else if (this.inputArr[i]['jobId'] != null) {
           values.push({
             jobId: this.inputArr[i]['jobId'],
-            filename: this.inputArr[i]['filename'],
+            filename: this.inputArr[i]['file']['name'],
             key: this.inputArr[i]['key'],
             ext: this.inputArr[i]['ext']
           })
-        } else if(this.inputArr[i]['ext'] != null) {
+        } else if (this.inputArr[i]['ext'] != null) {
           values.push({
             key: this.inputArr[i]['key'],
-            filename: this.inputArr[i]['filename'],
+            filename: this.inputArr[i]['file']['name'],
             ext: this.inputArr[i]['ext']
           })
         } else {
           values.push({
             key: this.inputArr[i]['key'],
-            filename: this.inputArr[i]['filename'],
+            filename: this.inputArr[i]['file']['name'],
             ext: this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1]
           })
         }
@@ -218,7 +223,7 @@ export class SfIUploader extends LitElement {
   inputArrInterval: any = null;
   uploadProgressInterval: any = null;
 
-  uploadProgress: any = {progress: 0};
+  uploadProgress: any = { progress: 0 };
   uploadProgressReceiver: any = null;
 
   current: number = 0;
@@ -229,7 +234,9 @@ export class SfIUploader extends LitElement {
   possibleMatches: Array<Array<string>> = [[]];
   matchArr: Array<Array<string>> = [[]];
 
-  uploadValid = false
+  uploadValid = false;
+
+  jobIds: Array<string> = [];
 
   @property()
   flow: string = "";
@@ -619,7 +626,7 @@ export class SfIUploader extends LitElement {
 
   // prepareXhr = async (data: any, url: string, loaderElement: any, authorization: any) => {
 
-    
+
   //   if(loaderElement != null) {
   //     loaderElement.innerHTML = '<div class="lds-dual-ring"></div>';
   //   }
@@ -628,8 +635,8 @@ export class SfIUploader extends LitElement {
   // }
   pageNum = 1;
   pageRendering = false;
-  pageNumPending:any = null;
-  pdfDoc:any = null
+  pageNumPending: any = null;
+  pdfDoc: any = null
   clearMessages = () => {
     this._SfRowError.style.display = 'none';
     this._SfRowErrorMessage.innerHTML = '';
@@ -661,7 +668,7 @@ export class SfIUploader extends LitElement {
     (element!.querySelector('.progress-bar-left') as HTMLDivElement)!.style.width = value + '%';
 
   }
-  
+
   renderMessageData = (message: string, verify: [string], match: [string]) => {
 
     (this._SfMessageContainer as HTMLDivElement).style.display = 'block';
@@ -672,13 +679,13 @@ export class SfIUploader extends LitElement {
     html += '<div part="sf-upload-message">' + message + '</div>'
     html += '</div>';
 
-    if(verify.length > 0){
+    if (verify.length > 0) {
       html += '<div class="d-flex">';
       html += '<div part="sf-upload-submessage">It must contain following words</div>';
       html += '</div>';
       html += '<div class="d-flex">';
       verify.forEach(verifyWord => {
-        html += '<div class="mr-10 upload-status" part="doctype-verify-badge">'+verifyWord+'</div>';  
+        html += '<div class="mr-10 upload-status" part="doctype-verify-badge">' + verifyWord + '</div>';
       });
       html += '</div>';
     }
@@ -688,12 +695,12 @@ export class SfIUploader extends LitElement {
     this.matchArr[0] = match
   }
 
-  renderPdfPage = (num:number, canvas: any, scale: any, ctx: any) => {
+  renderPdfPage = (num: number, canvas: any, scale: any, ctx: any) => {
     this.pageRendering = true;
     // Using promise to fetch the page
     let thisObj = this
-    this.pdfDoc.getPage(num).then(function(page:any) {
-      var viewport = page.getViewport({scale: scale});
+    this.pdfDoc.getPage(num).then(function (page: any) {
+      var viewport = page.getViewport({ scale: scale });
       canvas.height = viewport.height;
       canvas.width = viewport.width;
 
@@ -705,8 +712,8 @@ export class SfIUploader extends LitElement {
       var renderTask = page.render(renderContext);
 
       // Wait for rendering to finish
-      
-      renderTask.promise.then(function() {
+
+      renderTask.promise.then(function () {
         thisObj.pageRendering = false;
         if (thisObj.pageNumPending !== null) {
           // New page rendering is pending
@@ -716,12 +723,12 @@ export class SfIUploader extends LitElement {
       });
     });
     console.log("rendering page", this._SfDetailContainer.querySelector('#pdf-page-num'), num)
-    if(this._SfDetailContainer.querySelector('#pdf-page-num') != null){
+    if (this._SfDetailContainer.querySelector('#pdf-page-num') != null) {
       this._SfDetailContainer.querySelector('#pdf-page-num').innerHTML = num + ""
     }
   }
 
-  queueRenderPage = (num:number, canvas: any, scale: any, ctx: any) => {
+  queueRenderPage = (num: number, canvas: any, scale: any, ctx: any) => {
     if (this.pageRendering) {
       this.pageNumPending = num;
     } else {
@@ -729,7 +736,7 @@ export class SfIUploader extends LitElement {
     }
   }
 
-  onPrevPage = (canvas: any, scale: any, ctx: any)=>{
+  onPrevPage = (canvas: any, scale: any, ctx: any) => {
     if (this.pageNum <= 1) {
       return;
     }
@@ -737,7 +744,7 @@ export class SfIUploader extends LitElement {
     this.queueRenderPage(this.pageNum, canvas, scale, ctx);
   }
 
-  onNextPage = (canvas: any, scale: any, ctx: any)=>{
+  onNextPage = (canvas: any, scale: any, ctx: any) => {
     if (this.pageNum >= this.pdfDoc.numPages) {
       return;
     }
@@ -749,17 +756,17 @@ export class SfIUploader extends LitElement {
     console.log('rendering detail', ext, fromMaximize)
     let detailHtml = '';
     detailHtml += '<div class="d-flex justify-between align-center m-10" part="details-controls-container">';
-      if(this.allowDownload == "yes"){
-        detailHtml += '<button part="button-icon" id="download-pdf-button"><span class="material-icons">cloud_download</span></button>'
-      }else{
-        detailHtml += '<button class="invisible" part="button-icon"><span class="material-icons">close</span></button>'
-      }
-      detailHtml += '<div id="pdf-controls-container" part="pdf-controls-container" class="d-flex justify-end align-center ml-10 mr-10">'
-        detailHtml += '<button id="pdf-prev" part="button-icon"><span class="material-icons">arrow_back</span></button>'
-        detailHtml += '<span class="m-5" part="pdf-pages">Page: <span id="pdf-page-num" part="pdf-page-num"></span> / <span id="pdf-page-count" part="pdf-page-count"></span></span>';
-        detailHtml += '<button id="pdf-next" part="button-icon"><span class="material-icons">arrow_forward</span></button>'
-      detailHtml += '</div>'  
-      detailHtml += `<button id="button-detail-cancel" part="button-icon"><span class="material-icons">${(fromMaximize || this.displayDetail == "yes") ? 'call_received' : 'close'}</span></button>`
+    if (this.allowDownload == "yes") {
+      detailHtml += '<button part="button-icon" id="download-pdf-button"><span class="material-icons">cloud_download</span></button>'
+    } else {
+      detailHtml += '<button class="invisible" part="button-icon"><span class="material-icons">close</span></button>'
+    }
+    detailHtml += '<div id="pdf-controls-container" part="pdf-controls-container" class="d-flex justify-end align-center ml-10 mr-10">'
+    detailHtml += '<button id="pdf-prev" part="button-icon"><span class="material-icons">arrow_back</span></button>'
+    detailHtml += '<span class="m-5" part="pdf-pages">Page: <span id="pdf-page-num" part="pdf-page-num"></span> / <span id="pdf-page-count" part="pdf-page-count"></span></span>';
+    detailHtml += '<button id="pdf-next" part="button-icon"><span class="material-icons">arrow_forward</span></button>'
+    detailHtml += '</div>'
+    detailHtml += `<button id="button-detail-cancel" part="button-icon"><span class="material-icons">${(fromMaximize || this.displayDetail == "yes") ? 'call_received' : 'close'}</span></button>`
     detailHtml += '</div>';
     detailHtml += '<canvas id="pdf-canvas" class="pdf-canvas mb-20", part="pdf-canvas"></canvas>';
 
@@ -767,13 +774,14 @@ export class SfIUploader extends LitElement {
     (this._SfDetailContainer as HTMLDivElement).style.display = 'flex';
     (this._SfDetailContainer as HTMLDivElement).querySelector('#download-pdf-button')?.addEventListener('click', () => {
 
-      const a = document.createElement("a");
-      a.style.display = "none";
-      a.href = data;
-      a.download = "download_"+new Date().getTime()+"." + ext;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a); 
+      // const a = document.createElement("a");
+      // a.style.display = "none";
+      // a.href = data;
+      // a.download = "download_" + new Date().getTime() + "." + ext;
+      // document.body.appendChild(a);
+      // a.click();
+      // document.body.removeChild(a);
+      this.downloadBase64(data, ext);
 
     });
     (this._SfDetailContainer as HTMLDivElement).querySelector('#button-detail-cancel')?.addEventListener('click', () => {
@@ -784,55 +792,85 @@ export class SfIUploader extends LitElement {
     });
     pdfjs.GlobalWorkerOptions.workerSrc = await this.loadWorkerURL("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.6.172/pdf.worker.min.js");
     const pdfjsLib = pdfjs;
-    var loadingTask = pdfjsLib.getDocument({data: atob(data.replace("data:application/pdf;base64,",""))});
-    var canvas:any = this._SfDetailContainer.querySelector('#pdf-canvas');
+    var loadingTask = pdfjsLib.getDocument({ data: atob(data.replace("data:application/pdf;base64,", "")) });
+    var canvas: any = this._SfDetailContainer.querySelector('#pdf-canvas');
     var ctx = canvas.getContext('2d');
     var scale = 1.2;
     let thisObj = this;
-    
+
     this._SfDetailContainer.querySelector('#pdf-prev')?.addEventListener('click', () => {
       thisObj.onPrevPage(canvas, scale, ctx)
     });
     this._SfDetailContainer.querySelector('#pdf-next')?.addEventListener('click', () => {
       thisObj.onNextPage(canvas, scale, ctx)
     });
-    loadingTask.promise.then(function(pdf:any) {
+    loadingTask.promise.then(function (pdf: any) {
       console.log('PDF loaded', canvas);
       thisObj.pdfDoc = pdf
       thisObj.pageNum = 1,
-      thisObj.pageRendering = false;
+        thisObj.pageRendering = false;
       thisObj.pageNumPending = null;
       thisObj._SfDetailContainer.querySelector('#pdf-page-count').innerHTML = pdf.numPages + ""
       thisObj._SfDetailContainer.querySelector('#pdf-controls-container').style.display = (pdf.numPages == 1) ? "none" : "flex"
       thisObj.renderPdfPage(thisObj.pageNum, canvas, scale, ctx)
     }, function (reason: any) {
       // PDF loading error
-      console.error(reason);
+      if (reason.name === 'PasswordException') {
+        if (reason.code === pdfjsLib.PasswordResponses.NEED_PASSWORD) {
+          console.log("Password required!");
+        }
+        if (reason.code === pdfjsLib.PasswordResponses.INCORRECT_PASSWORD) {
+          console.log("Incorrect password!");
+        }
+      }else{
+        console.error(reason)
+      }
     });
   }
-  
-  loadWorkerURL = async (url:string) => {
-    let cachedJSDfd = new pdfjs.PromiseCapability();
-    var xmlhttp: XMLHttpRequest;
-    xmlhttp=new XMLHttpRequest();
+  loadWorkerURL = async (url: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const xmlhttp = new XMLHttpRequest();
 
-    //the callback function to be callled when AJAX request comes back
-    xmlhttp.onreadystatechange=function(){
-        if (xmlhttp.readyState==4 && xmlhttp.status==200){
-            var workerJSBlob = new Blob([xmlhttp.responseText], {
-                type: "text/javascript"
+      xmlhttp.onreadystatechange = function () {
+        if (xmlhttp.readyState === 4) {
+          if (xmlhttp.status === 200) {
+            const workerJSBlob = new Blob([xmlhttp.responseText], {
+              type: "text/javascript"
             });
-            cachedJSDfd.resolve(window.URL.createObjectURL(workerJSBlob));
+            resolve(window.URL.createObjectURL(workerJSBlob));
+          } else {
+            reject(new Error(`Failed to load worker script: ${xmlhttp.status}`));
+          }
         }
-    };
-    xmlhttp.open("GET",url,true);
-    xmlhttp.send();
-    return cachedJSDfd.promise;
-}
+      };
+
+      xmlhttp.onerror = () => reject(new Error("XHR request failed"));
+      xmlhttp.open("GET", url, true);
+      xmlhttp.send();
+    });
+  };
+  //   loadWorkerURL = async (url:string) => {
+  //     let cachedJSDfd = new pdfjs.PromiseCapability();
+  //     var xmlhttp: XMLHttpRequest;
+  //     xmlhttp=new XMLHttpRequest();
+
+  //     //the callback function to be callled when AJAX request comes back
+  //     xmlhttp.onreadystatechange=function(){
+  //         if (xmlhttp.readyState==4 && xmlhttp.status==200){
+  //             var workerJSBlob = new Blob([xmlhttp.responseText], {
+  //                 type: "text/javascript"
+  //             });
+  //             cachedJSDfd.resolve(window.URL.createObjectURL(workerJSBlob));
+  //         }
+  //     };
+  //     xmlhttp.open("GET",url,true);
+  //     xmlhttp.send();
+  //     return cachedJSDfd.promise;
+  // }
 
   renderMaximize = async (ext: string, data: string) => {
-    if(ext == "png" || ext == "jpg") {
-      if(this.displayDetail == "yes"){
+    if (ext == "png" || ext == "jpg") {
+      if (this.displayDetail == "yes") {
         (this._SfDetailContainer as HTMLDivElement).style.display = 'flex';
         let flagSetHtml = true;
         var html = ''
@@ -841,19 +879,19 @@ export class SfIUploader extends LitElement {
         html += '<button id="button-detail-cancel" part="button-icon"><span class="material-icons">call_received</span></button>'
         html += '</div>';
 
-        if(ext == "png" || ext == "jpg") {
+        if (ext == "png" || ext == "jpg") {
 
-          
+
           html += '<div class="d-flex justify-center">';
-          html += '<img src="'+data+'" alt="picture" />'
+          html += '<img src="' + data + '" alt="picture" />'
           html += '</div>';
 
 
-        } else if(ext == "pdf"){
+        } else if (ext == "pdf") {
           this.expandPdfDetail(ext, data, true)
           flagSetHtml = false
-        } 
-        if(flagSetHtml){
+        }
+        if (flagSetHtml) {
           (this._SfDetailContainer as HTMLDivElement).innerHTML = html;
         }
 
@@ -865,25 +903,25 @@ export class SfIUploader extends LitElement {
           (this._SfDetailContainer as HTMLDivElement).style.display = 'none';
 
         });
-      }else{
+      } else {
         const contentType: any = (data.match(/[^:]\w+\/[\w-+\d.]+(?=;|,)/) ?? [""])[0];
 
         const byteCharacters = atob(data.substr(`data:${contentType};base64,`.length));
         const byteArrays = [];
 
         for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
-            const slice = byteCharacters.slice(offset, offset + 1024);
+          const slice = byteCharacters.slice(offset, offset + 1024);
 
-            const byteNumbers = new Array(slice.length);
-            for (let i = 0; i < slice.length; i++) {
-                byteNumbers[i] = slice.charCodeAt(i);
-            }
+          const byteNumbers = new Array(slice.length);
+          for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+          }
 
-            const byteArray = new Uint8Array(byteNumbers);
+          const byteArray = new Uint8Array(byteNumbers);
 
-            byteArrays.push(byteArray);
+          byteArrays.push(byteArray);
         }
-        const blob = new Blob(byteArrays, {type: contentType});
+        const blob = new Blob(byteArrays, { type: contentType });
         const blobUrl = URL.createObjectURL(blob);
 
         window.open(blobUrl, '_blank');
@@ -892,107 +930,112 @@ export class SfIUploader extends LitElement {
   }
 
   renderDownload = async (ext: string, data: string) => {
-    const a = document.createElement("a");
-    a.style.display = "none";
-    a.href = data;
-    a.download = "download_"+new Date().getTime()+"." + ext;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a); 
+    // const a = document.createElement("a");
+    // a.style.display = "none";
+    // a.href = data;
+    // a.download = "download_" + new Date().getTime() + "." + ext;
+    // document.body.appendChild(a);
+    // a.click();
+    // document.body.removeChild(a);
+    this.downloadBase64(data, ext);
   }
-  
+
   renderKeyData = async (ext: string, data: string, hidePreview: boolean = false) => {
 
     var html = '';
     console.log("key Data", data, ext, this.mode)
-    if(this.mode == "view"){
-      if(ext == "png" || ext == "jpg") {
+    if (this.mode == "view") {
+      if (ext == "png" || ext == "jpg") {
 
         html += '<div class="d-flex justify-center align-center" part="image-container">';
-        if(!hidePreview){
-          html += '<img src="'+data+'" alt="picture" part="image-component" class="mr-10"/>'
+        if (!hidePreview) {
+          html += '<img src="' + data + '" alt="picture" part="image-component" class="mr-10"/>'
         }
-        if(this.maximize == "yes"){
+        if (this.maximize == "yes") {
           html += '<button id="button-open-in-new-tab" part="button-icon"><span class="material-icons">open_in_new</span></button>'
         }
         html += '</div>';
         (this._SfUploadContainer as HTMLDivElement).innerHTML = html;
         (this._SfUploadContainer as HTMLDivElement).style.display = 'flex';
-        if(this.maximize == "yes"){
-          (this._SfUploadContainer.querySelector('#button-open-in-new-tab') as HTMLButtonElement).addEventListener('click',()=>{
-            if(hidePreview){
-              Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderMaximize, (errMsg: string)=>{this.setError(errMsg);setTimeout(() => {
-                this.clearMessages();
-              }, 3000)}, this.projectId)
-            }else{
+        if (this.maximize == "yes") {
+          (this._SfUploadContainer.querySelector('#button-open-in-new-tab') as HTMLButtonElement).addEventListener('click', () => {
+            if (hidePreview) {
+              Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderMaximize, (errMsg: string) => {
+                this.setError(errMsg); setTimeout(() => {
+                  this.clearMessages();
+                }, 3000)
+              }, this.projectId)
+            } else {
               console.log('opening in new tab')
-              
+
               const contentType: any = (data.match(/[^:]\w+\/[\w-+\d.]+(?=;|,)/) ?? [""])[0];
 
               const byteCharacters = atob(data.substr(`data:${contentType};base64,`.length));
               const byteArrays = [];
 
               for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
-                  const slice = byteCharacters.slice(offset, offset + 1024);
+                const slice = byteCharacters.slice(offset, offset + 1024);
 
-                  const byteNumbers = new Array(slice.length);
-                  for (let i = 0; i < slice.length; i++) {
-                      byteNumbers[i] = slice.charCodeAt(i);
-                  }
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) {
+                  byteNumbers[i] = slice.charCodeAt(i);
+                }
 
-                  const byteArray = new Uint8Array(byteNumbers);
+                const byteArray = new Uint8Array(byteNumbers);
 
-                  byteArrays.push(byteArray);
+                byteArrays.push(byteArray);
               }
-              const blob = new Blob(byteArrays, {type: contentType});
+              const blob = new Blob(byteArrays, { type: contentType });
               const blobUrl = URL.createObjectURL(blob);
 
               window.open(blobUrl, '_blank');
             }
-            
+
           })
         }
-      }else if(ext == "pdf"){
+      } else if (ext.toLowerCase() == "pdf") {
         html += '<div class="d-flex justify-center align-center" part="pdf-thumbnail-container">';
-        if(!hidePreview){
+        if (!hidePreview) {
           html += '<canvas id="pdf-canvas-thumbnail" class="pdf-canvas-thumbnail", part="pdf-canvas-thumbnail"></canvas>';
         }
-        if(this.maximize == "yes"){
+        if (this.maximize == "yes") {
           html += '<button id="button-expand-pdf" part="button-icon"><span class="material-icons">open_in_new</span></button>';
         }
         html += '</div>';
         (this._SfUploadContainer as HTMLDivElement).innerHTML = html;
-        console.log(html, (this._SfUploadContainer as HTMLDivElement), (this._SfUploadContainer as HTMLDivElement).innerHTML );
+        console.log(html, (this._SfUploadContainer as HTMLDivElement), (this._SfUploadContainer as HTMLDivElement).innerHTML);
         (this._SfUploadContainer as HTMLDivElement).style.display = 'flex';
 
-        if(this.maximize == "yes"){
-          (this._SfUploadContainer.querySelector('#button-expand-pdf') as HTMLButtonElement).addEventListener('click',()=>{
-            if(hidePreview){
-              Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.expandPdfDetail, (errMsg: string)=>{this.setError(errMsg);setTimeout(() => {
-                this.clearMessages();
-              }, 3000)}, this.projectId)
-            }else{
+        if (this.maximize == "yes") {
+          (this._SfUploadContainer.querySelector('#button-expand-pdf') as HTMLButtonElement).addEventListener('click', () => {
+            if (hidePreview) {
+              Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.expandPdfDetail, (errMsg: string) => {
+                this.setError(errMsg); setTimeout(() => {
+                  this.clearMessages();
+                }, 3000)
+              }, this.projectId)
+            } else {
               this.expandPdfDetail(ext, data)
             }
           })
         }
-        if(!hidePreview){
+        if (!hidePreview) {
           pdfjs.GlobalWorkerOptions.workerSrc = await this.loadWorkerURL("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.6.172/pdf.worker.min.js");
           const pdfjsLib = pdfjs;
-          
+
           // Using DocumentInitParameters object to load binary data.
-          var loadingTask = pdfjsLib.getDocument({data: atob(data.replace("data:application/pdf;base64,",""))});
-          
-          var canvas:any = this._SfUploadContainer.querySelector('#pdf-canvas-thumbnail');
+          var loadingTask = pdfjsLib.getDocument({ data: atob(data.replace("data:application/pdf;base64,", "")) });
+
+          var canvas: any = this._SfUploadContainer.querySelector('#pdf-canvas-thumbnail');
           var ctx = canvas.getContext('2d');
           var scale = 0.8;
           let thisObj = this;
-          
-          loadingTask.promise.then(function(pdf:any) {
+
+          loadingTask.promise.then(function (pdf: any) {
             console.log('PDF loaded');
             thisObj.pdfDoc = pdf
             thisObj.pageNum = 1,
-            thisObj.pageRendering = false;
+              thisObj.pageRendering = false;
             thisObj.pageNumPending = null;
             // thisObj._SfUploadContainer.querySelector('#pdf-page-count').innerHTML = pdf.numPages + ""
             // thisObj._SfUploadContainer.querySelector('#pdf-controls-container').style.display = (pdf.numPages == 1) ? "none" : "block"
@@ -1002,7 +1045,7 @@ export class SfIUploader extends LitElement {
             console.error(reason);
           });
         }
-      }else if(this.maximize == "yes"){
+      } else if (this.maximize == "yes") {
         html += '<div class="d-flex justify-center align-center">';
         html += '<button class="d-flex justify-center align-center" part="button-icon" id="download-button"><span>Download </span><span class="material-icons ml-10">cloud_download</span></button>'
         html += '</div>';
@@ -1010,23 +1053,26 @@ export class SfIUploader extends LitElement {
         (this._SfUploadContainer as HTMLDivElement).innerHTML = html;
         (this._SfUploadContainer as HTMLDivElement).style.display = 'flex';
         (this._SfUploadContainer as HTMLDivElement).querySelector('#download-button')?.addEventListener('click', () => {
-          if(hidePreview){
-            Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderDownload, (errMsg: string)=>{this.setError(errMsg);setTimeout(() => {
-              this.clearMessages();
-            }, 3000)}, this.projectId)
-          }else{
-            const a = document.createElement("a");
-            a.style.display = "none";
-            a.href = data;
-            a.download = "download_"+new Date().getTime()+"." + ext;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a); 
+          if (hidePreview) {
+            Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderDownload, (errMsg: string) => {
+              this.setError(errMsg); setTimeout(() => {
+                this.clearMessages();
+              }, 3000)
+            }, this.projectId)
+          } else {
+            // const a = document.createElement("a");
+            // a.style.display = "none";
+            // a.href = data;
+            // a.download = "download_" + new Date().getTime() + "." + ext;
+            // document.body.appendChild(a);
+            // a.click();
+            // document.body.removeChild(a);
+            this.downloadBase64(data, ext);
           }
-  
+
         });
       }
-    }else{
+    } else {
       (this._SfDetailContainer as HTMLDivElement).style.display = 'flex';
       let flagSetHtml = true;
       html += '<div class="d-flex justify-between m-10">';
@@ -1034,15 +1080,15 @@ export class SfIUploader extends LitElement {
       html += '<button id="button-detail-cancel" part="button-icon"><span class="material-icons">close</span></button>'
       html += '</div>';
 
-      if(ext == "png" || ext == "jpg") {
+      if (ext == "png" || ext == "jpg") {
 
-        
+
         html += '<div class="d-flex justify-center">';
-        html += '<img src="'+data+'" alt="picture" />'
+        html += '<img src="' + data + '" alt="picture" />'
         html += '</div>';
 
 
-      } else if(ext == "pdf"){
+      } else if (ext == "pdf") {
         this.expandPdfDetail(ext, data)
         flagSetHtml = false
       } else {
@@ -1054,7 +1100,7 @@ export class SfIUploader extends LitElement {
 
       }
 
-      if(flagSetHtml){
+      if (flagSetHtml) {
         (this._SfDetailContainer as HTMLDivElement).innerHTML = html;
       }
 
@@ -1069,21 +1115,77 @@ export class SfIUploader extends LitElement {
 
       (this._SfDetailContainer as HTMLDivElement).querySelector('#download-button')?.addEventListener('click', () => {
 
-        const a = document.createElement("a");
-        a.style.display = "none";
-        a.href = data;
-        a.download = "download_"+new Date().getTime()+"." + ext;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a); 
+        this.downloadBase64(data, ext);
+        // const a = document.createElement("a");
+        // a.style.display = "none";
+        // a.href = data;
+        // a.download = "download_" + new Date().getTime() + "." + ext;
+        // document.body.appendChild(a);
+        // a.click();
+        // document.body.removeChild(a);
 
       });
     }
 
   }
 
+  downloadBase64 = (base64Input: string, fallbackExt = "bin", fallbackMime = "application/octet-stream") => {
+    let base64Data: string;
+    let mimeType: string = fallbackMime;
+    let ext: string = fallbackExt;
+
+    // If input has a data URI prefix
+    if (base64Input.startsWith("data:")) {
+      const matches = base64Input.match(/^data:(.+);base64,(.*)$/);
+      if (matches) {
+        mimeType = matches[1];
+        base64Data = matches[2];
+
+        // Try to guess extension from MIME type
+        const parts = mimeType.split("/");
+        if (parts.length === 2) {
+          ext = parts[1];
+        }
+      } else {
+        throw new Error("Invalid base64 data URI");
+      }
+    } else {
+      // Raw base64 string
+      base64Data = base64Input;
+    }
+
+    // Convert Base64 → binary
+    const byteChars = atob(base64Data);
+    const byteNumbers = new Array(byteChars.length);
+
+    for (let i = 0; i < byteChars.length; i++) {
+      byteNumbers[i] = byteChars.charCodeAt(i);
+    }
+
+    const byteArray = new Uint8Array(byteNumbers);
+
+    // Create Blob
+    const blob = new Blob([byteArray], { type: mimeType });
+
+    // Create object URL
+    const url = URL.createObjectURL(blob);
+
+    // Create hidden <a>
+    const a = document.createElement("a");
+    a.style.display = "none";
+    a.href = url;
+    a.download = `download_${Date.now()}.${ext}`;
+
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    // Free memory
+    URL.revokeObjectURL(url);
+  }
+
   chunkify = (base64String: string) => {
-    let regex = new RegExp(`.{1,${this.chunkSize}}`,'g')
+    let regex = new RegExp(`.{1,${this.chunkSize}}`, 'g')
     const chunks = base64String.match(regex)
     return chunks;
 
@@ -1099,15 +1201,18 @@ export class SfIUploader extends LitElement {
       console.log(resultExtractStatus)
       await Util.sleep(5000);
 
-    } while (resultExtractStatus != null && resultExtractStatus.status == "IN_PROGRESS");
+    } while (resultExtractStatus == null || (resultExtractStatus != null && resultExtractStatus.status == "IN_PROGRESS"));
 
-    if(resultExtractStatus != null && resultExtractStatus.status == "SUCCEEDED") {
-      let index = 0
+    if (resultExtractStatus != null && resultExtractStatus.status == "SUCCEEDED" && this.jobIds.indexOf(jobId) >= 0) {
+      let index = -1
       for (let i = 0; i < this.inputArr.length; i++) {
-        if(this.inputArr[i]['jobId'] == jobId){
+        if (this.inputArr[i]['jobId'] == jobId) {
           index = i;
           break;
         }
+      }
+      if (index < 0) {
+        return;
       }
       this.arrWords = [];
       this.arrWordsMeta = {};
@@ -1125,49 +1230,52 @@ export class SfIUploader extends LitElement {
   processExtract = async (key: string, fileIndex: any) => {
 
     // this.extractState.state = 1;
-    const resultExtract = await Api.getExtract(key, fileIndex, this.dataPassthrough, this.apiId, this._SfLoader, (msg: string) => {this.setErrorMaliciousContent(msg, fileIndex)}, this.callbackUrlHost, this.callbackUrlPath, parseInt(fileIndex) == 0 ? this.docType : "", this.projectId);
-    if(resultExtract == null) {
+    let filename = this.inputArr[fileIndex]['filename'];
+    const resultExtract = await Api.getExtract(key, fileIndex, this.dataPassthrough, this.apiId, this._SfLoader, (msg: string) => { this.setErrorMaliciousContent(msg, fileIndex) }, this.callbackUrlHost, this.callbackUrlPath, parseInt(fileIndex) == 0 ? this.docType : "", this.projectId, filename, this.emailcontent);
+    if (resultExtract == null) {
       return null;
     }
     const jobId = resultExtract.jobId;
     return jobId;
-  
+
   }
 
   setErrorMaliciousContent = (msg: string, fileIndex: any) => {
-    if(msg.toLowerCase().indexOf("malicious") >= 0) {
-       this.inputArr.splice(fileIndex,1);
-       this.populateInputs();
+    if (msg.toLowerCase().indexOf("malicious") >= 0) {
+      this.inputArr.splice(fileIndex, 1);
+      this.populateInputs();
     }
     this.setError(msg);
   }
 
   executeAndUpdateExtract = async (jobId: string, fileIndex: number) => {
-
+    if (this.jobIds.indexOf(jobId) < 0) {
+      this.jobIds.push(jobId);
+    }
     await this.executeExtract(jobId);
     let index = 0
-      for (let i = 0; i < this.inputArr.length; i++) {
-        if(this.inputArr[i]['jobId'] == jobId){
-          index = i;
-          break;
-        }
+    for (let i = 0; i < this.inputArr.length; i++) {
+      if (this.inputArr[i]['jobId'] == jobId) {
+        index = i;
+        break;
       }
+    }
     this.inputArr[fileIndex]["arrWords"] = this.arrWords;
     this.inputArr[fileIndex]["arrWordsMeta"] = this.arrWordsMeta;
     this.inputArr[fileIndex]["documentParsed"] = this.documentParsed[index];
-    const event2 = new CustomEvent('analysisCompleted', {detail: {meta: this.arrWordsMeta, words: this.arrWords}, bubbles: true, composed: true});
+    const event2 = new CustomEvent('analysisCompleted', { detail: { meta: this.arrWordsMeta, words: this.arrWords }, bubbles: true, composed: true });
     this.dispatchEvent(event2);
     this.isUploadValid()
   }
 
   beginUploadJob = (fileIndex: any, file: any) => {
-    const event2 = new CustomEvent('uploadStarted', {detail: {}, bubbles: true, composed: true});
+    const event2 = new CustomEvent('uploadStarted', { detail: {}, bubbles: true, composed: true });
     this.dispatchEvent(event2);
 
     const fileName = file.name;
     const ext = fileName.split(".")[file.name.split(".").length - 1].toLowerCase();
     const key = Util.newUuidV4();
-    
+
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onloadend = () => {
@@ -1176,35 +1284,35 @@ export class SfIUploader extends LitElement {
 
         const chunks = this.chunkify(reader.result as string);
         await Api.uploadMeta(key, fileName, ext, chunks?.length + "", this.apiId, this._SfLoader, this.setError, this.projectId)
-        for(var i = 0; i < chunks!.length; i++) {
-          this.uploadProgressReceiver = (this._SfUploadContainer as HTMLDivElement).querySelector('#upload-row-'+fileIndex);
+        for (var i = 0; i < chunks!.length; i++) {
+          this.uploadProgressReceiver = (this._SfUploadContainer as HTMLDivElement).querySelector('#upload-row-' + fileIndex);
           await Api.uploadBlock(key, i + "", chunks![i] + "", this.apiId, this._SfLoader, this.setError, this.projectId);
-          this.uploadProgress.progress = parseInt((((i+1)*100)/chunks!.length) + "");
+          this.uploadProgress.progress = parseInt((((i + 1) * 100) / chunks!.length) + "");
         }
-        for(var i = 0; i < this.inputArr.length; i++) {
+        for (var i = 0; i < this.inputArr.length; i++) {
           this.inputArr[i]["progress"] = false;
         }
         this.inputArr[fileIndex]["key"] = key;
         this.inputArr[fileIndex]["ext"] = ext;
 
         const keys = [];
-        for(i = 0; i < this.inputArr.length; i++) {
-          if(this.inputArr[i]['key'] != null && this.inputArr[i]['key'].length > 5) {
+        for (i = 0; i < this.inputArr.length; i++) {
+          if (this.inputArr[i]['key'] != null && this.inputArr[i]['key'].length > 5) {
             keys.push(this.inputArr[i]['key']);
           }
         }
-        const event = new CustomEvent('uploadCompleted', {detail: keys, bubbles: true, composed: true});
+        const event = new CustomEvent('uploadCompleted', { detail: keys, bubbles: true, composed: true });
         this.dispatchEvent(event);
 
-        if(this.extract.toLowerCase() == "yes" && this.getExtractableExtensions().indexOf(ext) >= 0) {
+        if (this.extract.toLowerCase() == "yes" && this.getExtractableExtensions().indexOf(ext) >= 0) {
 
           const jobId = await this.processExtract(key, fileIndex);
-          if(jobId == null) {
+          if (jobId == null) {
             this.isUploadValid();
             return;
           }
           this.inputArr[fileIndex]["jobId"] = jobId;
-          const event1 = new CustomEvent('analysisInProgress', {detail: jobId, bubbles: true, composed: true});
+          const event1 = new CustomEvent('analysisInProgress', { detail: jobId, bubbles: true, composed: true });
           this.dispatchEvent(event1);
 
           this.executeAndUpdateExtract(jobId, fileIndex);
@@ -1221,22 +1329,24 @@ export class SfIUploader extends LitElement {
   }
 
   clearUploads = () => {
-    this.inputArr = [];    
+    this.inputArr = [];
   }
-  
+
 
   populateInputs = () => {
 
     var htmlStr = '';
-    if(this.mode == "view"){
+    if (this.mode == "view") {
       console.log("populating view input", this.inputArr, this.projectId)
-      if(this.inputArr.length > 0){
-        if(this.hidepreview == "yes"){
-          this.renderKeyData(this.inputArr[0]['ext'],"", true);
-        }else{
-          Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderKeyData, (errMsg: string)=>{this.setError(errMsg);setTimeout(() => {
-            this.clearMessages();
-          }, 3000)}, this.projectId)
+      if (this.inputArr.length > 0) {
+        if (this.hidepreview == "yes") {
+          this.renderKeyData(this.inputArr[0]['ext'], "", true);
+        } else {
+          Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderKeyData, (errMsg: string) => {
+            this.setError(errMsg); setTimeout(() => {
+              this.clearMessages();
+            }, 3000)
+          }, this.projectId)
         }
       }
       // for(var i = 0; i < this.inputArr.length; i++){
@@ -1255,183 +1365,183 @@ export class SfIUploader extends LitElement {
       //     // file with upload complete
       //   }
       // }
-    }else{
+    } else {
       console.log('populating input', this.inputArr)
-      for(var i = 0; i < this.inputArr.length; i++) {
-        htmlStr += '<div part="input" id="upload-row-'+i+'">';
-          htmlStr += '<div class="d-flex align-center justify-between flex-wrap">';
-          if(this.inputArr[i].file == null) {
+      for (var i = 0; i < this.inputArr.length; i++) {
+        htmlStr += '<div part="input" id="upload-row-' + i + '">';
+        htmlStr += '<div class="d-flex align-center justify-between flex-wrap">';
+        if (this.inputArr[i].file == null) {
 
-            htmlStr += '<input id="file-'+i+'" type="file" />';
-            htmlStr += '<div class="d-flex align-center justify-between flex-wrap" part="upload-buttons-container">';
-            htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>')
-            if(!this.readOnly){
-              htmlStr += '<button id="button-delete-'+i+'" part="button-icon"><span class="material-icons">delete</span></button>';
-            }
-            htmlStr += '</div>';
-
-          } else if (this.inputArr[i]["arrWords"] != null) {
-
-            const fileName = this.inputArr[i]['file'].name;
-            const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
-            htmlStr += '<div class="w-100 d-flex align-center justify-between">';
-              htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
-              htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
-                // htmlStr += '<button id="button-delete-'+i+'" class="mr-10" part=""><span class="material-icons">delete</span></button>';
-                htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analysis Complete</div>';
-                htmlStr += (this.docType == "" || i > 0? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
-                htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
-                if(this.inputArr[i]["delete"]){
-                  htmlStr += '<button id="button-delete-file-cancel-'+i+'" part="button-icon" class="button-icon"><span class="material-icons">close</span></button>'
-                  htmlStr += '<button id="button-delete-file-confirm-'+i+'" part="button-icon" class="button-icon"><span class="material-icons">delete</span><span class="material-icons">done</span></button>'
-                }else{
-                  if(!this.readOnly){
-                    htmlStr += '<button id="button-delete-file-'+i+'" part="button-icon" class="button-icon"><span class="material-icons">delete</span></button>'
-                  }
-                  htmlStr += '<button id="button-open-'+i+'" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
-                }
-              htmlStr += '</div>';
-            htmlStr += '</div>';
-            htmlStr += '<div part="extracted-meta" class="d-flex align-center mt-10 w-100">';
-              if(this.inputArr[i]["arrWordsMeta"]['PAGE'] != null){
-                htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['PAGE'] +' Page(s)</div>';
-              }else{
-                htmlStr += '<div part="extracted-text-chip">0 Page(s)</div>';
-              }
-              if(this.inputArr[i]["arrWordsMeta"]['LINE'] != null){
-                htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['LINE'] +' Line(s)</div>';
-              }else{
-                htmlStr += '<div part="extracted-text-chip">0 Line(s)</div>';
-              }
-              if(this.inputArr[i]["arrWordsMeta"]['WORD'] != null){
-                htmlStr += '<div part="extracted-text-chip">'+this.inputArr[i]["arrWordsMeta"]['WORD'] +' Word(s)</div>';
-              }else{
-                htmlStr += '<div part="extracted-text-chip">0 Word(s)</div>';
-              }
-              htmlStr += i == 0 ? this.documentParsed[i].length > 0 ? ( this.documentParsed[i] == "yes" ? ('<div part="extracted-text-chip-parsed" class="d-flex align-center"><span>Document Check Successful</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">verified</span></div>') : ('<div part="extracted-text-chip-failed" class="d-flex align-center"><span>Document Check Failed</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">release_alert</span></div>')) : "" : "";
-            htmlStr += '</div>'; 
-            if(this.documentParsed[i] && this.matchArr[0].length > 0 && this.possibleMatches[i].length > 0) {
-              htmlStr += '<div class="mt-20 w-100">';
-                htmlStr += '<div part="matches-title">Possible Matches</div>';
-                htmlStr += '<div part="extracted-meta" class="d-flex align-center w-100">';
-                  for(var j = 0; j < this.possibleMatches[i].length; j++) {
-                    htmlStr += ('<div part="matches" class="mr-10">'+this.possibleMatches[i][j]+'</div>');
-                  }
-                htmlStr += '</div>';
-              htmlStr += '</div>';
-            }
-            htmlStr += '<div class="mt-20 w-100">';
-              htmlStr += '<div part="extracted-title">Extracted Text</div>';
-              htmlStr += '<div part="extracted-text" class="d-flex align-center">';
-              htmlStr += '<sf-i-elastic-text text="'+this.inputArr[i]["arrWords"].join(' ')+'" minLength="100"></sf-i-elastic-text>';
-              htmlStr += '</div>';
-            htmlStr += '</div>';
-
-          } else if (this.inputArr[i]["jobId"] != null) {
-
-            const fileName = this.inputArr[i]['file'].name;
-            const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
-            htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
-            htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
-            htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analyzing</div><div class="mr-10 analyzing-loader"></div>';
-            htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
-            htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
-            htmlStr += '</div>';
-
-          } else if (this.inputArr[i]["key"] != null) {
-            const fileName = this.inputArr[i]['file'].name;
-            const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
-            htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
-            htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
-            htmlStr += '<div class="progress-number mr-10 upload-status" part="upload-status"></div>';
-            htmlStr += '<div class="mr-10 upload-status" part="upload-status">Upload Complete</div>';
-            htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
-            htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
-            if(this.inputArr[i]["delete"]){
-              htmlStr += '<button id="button-delete-file-cancel-'+i+'" part="button-icon" class="mr-10 button-icon"><span class="material-icons">close</span></button>'
-              htmlStr += '<button id="button-delete-file-confirm-'+i+'" part="button-icon" class="button-icon"><span class="material-icons">delete</span><span class="material-icons">done</span></button>'
-            }else{
-              console.log('delete button',this.extract.toLowerCase(), this.getExtractableExtensions().indexOf(ext) )
-              // if(this.extract.toLowerCase() != "yes" && this.getExtractableExtensions().indexOf(ext) < 0){
-              if(this.extract.toLowerCase() != "yes"){
-                htmlStr += '<button id="button-delete-file-'+i+'" part="button-icon" class="mr-10 button-icon"><span class="material-icons">delete</span></button>'
-              }else if(this.getExtractableExtensions().indexOf(ext) < 0){
-                htmlStr += '<button id="button-delete-file-'+i+'" part="button-icon" class="mr-10 button-icon"><span class="material-icons">delete</span></button>'
-              }
-              htmlStr += '<button id="button-open-'+i+'" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
-            }
-            htmlStr += '</div>';
-            
-          }else {
-            
-            const fileName = this.inputArr[i]['file'].name;
-            const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
-            console.log('populating', fileName, ext, this.inputArr[i]['filename'])
-            htmlStr += '<div class="mr-10"><sf-i-elastic-text text="'+fileName+'" minLength="20"></sf-i-elastic-text></div>';
-            htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
-            htmlStr += '<div class="progress-number mr-10 upload-status" part="upload-status"></div>';
-            htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">'+this.docType+'</div>');
-            htmlStr += '<div part="ext-badge" class="ext-badge mr-10">'+ext+'</div>';
-            if(this.inputArr[i]["progress"] == null || !this.inputArr[i]["progress"]) {
-              htmlStr += '<button id="button-cancel-'+i+'" part="button-icon" class="mr-10"><span class="material-icons">close</span></button>';
-              htmlStr += '<button id="button-upload-'+i+'" part="button-icon" class="d-flex align-center"><h3 class="m-5">Upload</h3> <span class="material-icons">upload</span></button>';
-            }
-            htmlStr += '</div>';
+          htmlStr += '<input id="file-' + i + '" type="file" />';
+          htmlStr += '<div class="d-flex align-center justify-between flex-wrap" part="upload-buttons-container">';
+          htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">' + this.docType + '</div>')
+          if (!this.readOnly) {
+            htmlStr += '<button id="button-delete-' + i + '" part="button-icon"><span class="material-icons">delete</span></button>';
           }
           htmlStr += '</div>';
-          if(this.inputArr[i]["progress"]) {
-            htmlStr += '<div class="d-flex">'
-            htmlStr += '<div class="progress-bar progress-bar-left" id="progress-bar-left-'+i+'"></div>'
-            htmlStr += '<div class="progress-bar progress-bar-right" id="progress-bar-right-'+i+'"></div>'
-            htmlStr += '</div>'
-          }
 
-          // if(this.inputArr[i].file != null && this.getExtractableExtensions().indexOf(this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1]) < 0){
-          //   htmlStr += '<div id="disclaimer-message-container" part="disclaimer-message-container">Text analysis is not supported for this file type.</div>'
-          // }
-          if(this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null)){
-            htmlStr += '<div id="message-container" class="hide" part="message-container"></div>'
+        } else if (this.inputArr[i]["arrWords"] != null) {
+
+          const fileName = this.inputArr[i]['file'].name;
+          const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
+          htmlStr += '<div class="w-100 d-flex align-center justify-between">';
+          htmlStr += '<div class="mr-10"><sf-i-elastic-text text="' + fileName + '" minLength="20"></sf-i-elastic-text></div>';
+          htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
+          // htmlStr += '<button id="button-delete-'+i+'" class="mr-10" part=""><span class="material-icons">delete</span></button>';
+          htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analysis Complete</div>';
+          htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">' + this.docType + '</div>');
+          htmlStr += '<div part="ext-badge" class="ext-badge mr-10">' + ext + '</div>';
+          if (this.inputArr[i]["delete"]) {
+            htmlStr += '<button id="button-delete-file-cancel-' + i + '" part="button-icon" class="button-icon"><span class="material-icons">close</span></button>'
+            htmlStr += '<button id="button-delete-file-confirm-' + i + '" part="button-icon" class="button-icon"><span class="material-icons">delete</span><span class="material-icons">done</span></button>'
+          } else {
+            if (!this.readOnly) {
+              htmlStr += '<button id="button-delete-file-' + i + '" part="button-icon" class="button-icon"><span class="material-icons">delete</span></button>'
+            }
+            htmlStr += '<button id="button-open-' + i + '" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
           }
+          htmlStr += '</div>';
+          htmlStr += '</div>';
+          htmlStr += '<div part="extracted-meta" class="d-flex align-center mt-10 w-100">';
+          if (this.inputArr[i]["arrWordsMeta"]['PAGE'] != null) {
+            htmlStr += '<div part="extracted-text-chip">' + this.inputArr[i]["arrWordsMeta"]['PAGE'] + ' Page(s)</div>';
+          } else {
+            htmlStr += '<div part="extracted-text-chip">0 Page(s)</div>';
+          }
+          if (this.inputArr[i]["arrWordsMeta"]['LINE'] != null) {
+            htmlStr += '<div part="extracted-text-chip">' + this.inputArr[i]["arrWordsMeta"]['LINE'] + ' Line(s)</div>';
+          } else {
+            htmlStr += '<div part="extracted-text-chip">0 Line(s)</div>';
+          }
+          if (this.inputArr[i]["arrWordsMeta"]['WORD'] != null) {
+            htmlStr += '<div part="extracted-text-chip">' + this.inputArr[i]["arrWordsMeta"]['WORD'] + ' Word(s)</div>';
+          } else {
+            htmlStr += '<div part="extracted-text-chip">0 Word(s)</div>';
+          }
+          htmlStr += i == 0 ? this.documentParsed[i].length > 0 ? (this.documentParsed[i] == "yes" ? ('<div part="extracted-text-chip-parsed" class="d-flex align-center"><span>Document Check Successful</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">verified</span></div>') : ('<div part="extracted-text-chip-failed" class="d-flex align-center"><span>Document Check Failed</span>&nbsp;&nbsp;<span class="material-symbols-outlined parsing-result">release_alert</span></div>')) : "" : "";
+          htmlStr += '</div>';
+          if (this.documentParsed[i] && this.matchArr[0].length > 0 && this.possibleMatches[i].length > 0) {
+            htmlStr += '<div class="mt-20 w-100">';
+            htmlStr += '<div part="matches-title">Possible Matches</div>';
+            htmlStr += '<div part="extracted-meta" class="d-flex align-center w-100">';
+            for (var j = 0; j < this.possibleMatches[i].length; j++) {
+              htmlStr += ('<div part="matches" class="mr-10">' + this.possibleMatches[i][j] + '</div>');
+            }
+            htmlStr += '</div>';
+            htmlStr += '</div>';
+          }
+          htmlStr += '<div class="mt-20 w-100">';
+          htmlStr += '<div part="extracted-title">Extracted Text</div>';
+          htmlStr += '<div part="extracted-text" class="d-flex align-center">';
+          htmlStr += '<sf-i-elastic-text text="' + this.inputArr[i]["arrWords"].join(' ') + '" minLength="100"></sf-i-elastic-text>';
+          htmlStr += '</div>';
+          htmlStr += '</div>';
+
+        } else if (this.inputArr[i]["jobId"] != null) {
+
+          const fileName = this.inputArr[i]['file'].name;
+          const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
+          htmlStr += '<div class="mr-10"><sf-i-elastic-text text="' + fileName + '" minLength="20"></sf-i-elastic-text></div>';
+          htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
+          htmlStr += '<div class="mr-10 upload-status" part="upload-status">Analyzing</div><div class="mr-10 analyzing-loader"></div>';
+          htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">' + this.docType + '</div>');
+          htmlStr += '<div part="ext-badge" class="ext-badge mr-10">' + ext + '</div>';
+          htmlStr += '</div>';
+
+        } else if (this.inputArr[i]["key"] != null) {
+          const fileName = this.inputArr[i]['file'].name;
+          const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
+          htmlStr += '<div class="mr-10"><sf-i-elastic-text text="' + fileName + '" minLength="20"></sf-i-elastic-text></div>';
+          htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
+          htmlStr += '<div class="progress-number mr-10 upload-status" part="upload-status"></div>';
+          htmlStr += '<div class="mr-10 upload-status" part="upload-status">Upload Complete</div>';
+          htmlStr += '<div part="ext-badge" class="ext-badge mr-10">' + ext + '</div>';
+          htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">' + this.docType + '</div>');
+          if (this.inputArr[i]["delete"]) {
+            htmlStr += '<button id="button-delete-file-cancel-' + i + '" part="button-icon" class="mr-10 button-icon"><span class="material-icons">close</span></button>'
+            htmlStr += '<button id="button-delete-file-confirm-' + i + '" part="button-icon" class="button-icon"><span class="material-icons">delete</span><span class="material-icons">done</span></button>'
+          } else {
+            console.log('delete button', this.extract.toLowerCase(), this.getExtractableExtensions().indexOf(ext))
+            // if(this.extract.toLowerCase() != "yes" && this.getExtractableExtensions().indexOf(ext) < 0){
+            if (this.extract.toLowerCase() != "yes") {
+              htmlStr += '<button id="button-delete-file-' + i + '" part="button-icon" class="mr-10 button-icon"><span class="material-icons">delete</span></button>'
+            } else if (this.getExtractableExtensions().indexOf(ext) < 0) {
+              htmlStr += '<button id="button-delete-file-' + i + '" part="button-icon" class="mr-10 button-icon"><span class="material-icons">delete</span></button>'
+            }
+            htmlStr += '<button id="button-open-' + i + '" part="button-icon" class=""><span class="material-icons">open_in_new</span></button>';
+          }
+          htmlStr += '</div>';
+
+        } else {
+
+          const fileName = this.inputArr[i]['file'].name;
+          const ext = this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1];
+          console.log('populating', fileName, ext, this.inputArr[i]['filename'])
+          htmlStr += '<div class="mr-10"><sf-i-elastic-text text="' + fileName + '" minLength="20"></sf-i-elastic-text></div>';
+          htmlStr += '<div class="d-flex align-center" part="upload-buttons-container">';
+          htmlStr += '<div class="progress-number mr-10 upload-status" part="upload-status"></div>';
+          htmlStr += (this.docType == "" || i > 0 ? "" : '<div class="mr-10 upload-status" part="doctype-badge">' + this.docType + '</div>');
+          htmlStr += '<div part="ext-badge" class="ext-badge mr-10">' + ext + '</div>';
+          if (this.inputArr[i]["progress"] == null || !this.inputArr[i]["progress"]) {
+            htmlStr += '<button id="button-cancel-' + i + '" part="button-icon" class="mr-10"><span class="material-icons">close</span></button>';
+            htmlStr += '<button id="button-upload-' + i + '" part="button-icon" class="d-flex align-center"><h3 class="m-5">Upload</h3> <span class="material-icons">upload</span></button>';
+          }
+          htmlStr += '</div>';
+        }
         htmlStr += '</div>';
-        if(this.docType.length > 2 && i == 0) {
-          if(this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null)){
-            Api.getMessageByDocType(this.docType,this.apiId, this._SfLoader, this.renderMessageData, this.setError);
+        if (this.inputArr[i]["progress"]) {
+          htmlStr += '<div class="d-flex">'
+          htmlStr += '<div class="progress-bar progress-bar-left" id="progress-bar-left-' + i + '"></div>'
+          htmlStr += '<div class="progress-bar progress-bar-right" id="progress-bar-right-' + i + '"></div>'
+          htmlStr += '</div>'
+        }
+
+        // if(this.inputArr[i].file != null && this.getExtractableExtensions().indexOf(this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1]) < 0){
+        //   htmlStr += '<div id="disclaimer-message-container" part="disclaimer-message-container">Text analysis is not supported for this file type.</div>'
+        // }
+        if (this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null)) {
+          htmlStr += '<div id="message-container" class="hide" part="message-container"></div>'
+        }
+        htmlStr += '</div>';
+        if (this.docType.length > 2 && i == 0) {
+          if (this.docType != "" && (this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null))) {
+            Api.getMessageByDocType(this.docType, this.apiId, this._SfLoader, this.renderMessageData, this.setError);
           }
         }
       }
-    
-      if(!this.readOnly && this.inputArr.length < parseInt(this.max) && this.mode != "view") {
-        htmlStr += '<button id="button-add" part="button" class="mt-10">'+this.newButtonText+'</button>';
+
+      if (!this.readOnly && this.inputArr.length < parseInt(this.max) && this.mode != "view") {
+        htmlStr += '<button id="button-add" part="button" class="mt-10">' + this.newButtonText + '</button>';
       }
-      if((this._SfUploadContainer as HTMLDivElement) == null){
+      if ((this._SfUploadContainer as HTMLDivElement) == null) {
         return;
       }
       (this._SfUploadContainer as HTMLDivElement).innerHTML = htmlStr;
 
       (this._SfUploadContainer as HTMLDivElement).querySelector('#button-add')?.addEventListener('click', () => {
-        if(this.current < this.getMax()) {
+        if (this.current < this.getMax()) {
           this.current++;
           this.inputArr.push({})
         }
         this.isUploadValid()
       });
 
-      for(i = 0; i < this.inputArr.length; i++) {
+      for (i = 0; i < this.inputArr.length; i++) {
 
-        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-'+i)?.addEventListener('click', (ev: any) => {
+        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-' + i)?.addEventListener('click', (ev: any) => {
           const index = ev.currentTarget.id.split("-")[2];
           this.inputArr.splice(index, 1)
           this.isUploadValid()
         });
 
-        (this._SfUploadContainer as HTMLDivElement).querySelector('#file-'+i)?.addEventListener('change', (ev: any) => {
+        (this._SfUploadContainer as HTMLDivElement).querySelector('#file-' + i)?.addEventListener('change', (ev: any) => {
           const index = ev.target.id.split("-")[1];
           const input = (ev.target as HTMLInputElement);
           this.inputArr[index]['file'] = input.files![0];
           this.inputArr[index]['filename'] = input.files![0].name;
           const ext = input.files![0].name.split(".")[input.files![0].name.split(".").length - 1]
-          if(input.files![0].size > this.maxSize) {
-            this.setError('Maximum allowed file size is ' + (this.maxSize/1024) + ' KB');
+          if (input.files![0].size > this.maxSize) {
+            this.setError('Maximum allowed file size is ' + (this.maxSize / 1024) + ' KB');
             Api.largeFileWarning(Util.formatFileSize(input.files![0].size), this.apiId, this._SfLoader, this.setError, this.projectId)
             setTimeout(() => {
               this.clearMessages();
@@ -1440,7 +1550,7 @@ export class SfIUploader extends LitElement {
             return;
           }
 
-          if(!this.getAllowedExtensions().includes(ext.toLowerCase())) {
+          if (!this.getAllowedExtensions().includes(ext.toLowerCase())) {
             this.setError('This file extension is not allowed');
             setTimeout(() => {
               this.clearMessages();
@@ -1449,42 +1559,44 @@ export class SfIUploader extends LitElement {
             return;
           }
         });
-        
-        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-file-'+i)?.addEventListener('click', (ev:any) => {
+
+        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-file-' + i)?.addEventListener('click', (ev: any) => {
           const index = ev.currentTarget.id.split("-")[3];
           console.log('button clicked', index)
           this.inputArr[index]['delete'] = true
         });
-        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-file-cancel-'+i)?.addEventListener('click', (ev:any) => {
+        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-file-cancel-' + i)?.addEventListener('click', (ev: any) => {
           const index = ev.currentTarget.id.split("-")[4];
           this.inputArr[index]['delete'] = false
         });
-        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-file-confirm-'+i)?.addEventListener('click', (ev:any) => {
+        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-delete-file-confirm-' + i)?.addEventListener('click', (ev: any) => {
           const index = ev.currentTarget.id.split("-")[4];
           console.log("confirming delete", index, this.inputArr[index])
           this.inputArr.splice(index, 1)
           this.isUploadValid()
         });
 
-        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-cancel-'+i)?.addEventListener('click', (ev: any) => {
+        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-cancel-' + i)?.addEventListener('click', (ev: any) => {
           const index = ev.currentTarget.id.split("-")[2];
-          this.inputArr.splice(index,1);
+          this.inputArr.splice(index, 1);
         });
 
-        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-upload-'+i)?.addEventListener('click', (ev: any) => {
+        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-upload-' + i)?.addEventListener('click', (ev: any) => {
           const index = ev.currentTarget.id.split("-")[2];
-          for(var i = 0; i < this.inputArr.length; i++) {
+          for (var i = 0; i < this.inputArr.length; i++) {
             this.inputArr[i]["progress"] = true;
           }
-          
+
           this.beginUploadJob(index, this.inputArr[index]['file']);
         });
 
-        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-open-'+i)?.addEventListener('click', (ev: any) => {
+        (this._SfUploadContainer as HTMLDivElement).querySelector('#button-open-' + i)?.addEventListener('click', (ev: any) => {
           const index = ev.currentTarget.id.split("-")[2];
-          Api.getKeyData(this.inputArr[index]['key'], this.apiId, this._SfLoader, this.renderKeyData, (errMsg: string)=>{this.setError(errMsg);setTimeout(() => {
-            this.clearMessages();
-          }, 3000)}, this.projectId)
+          Api.getKeyData(this.inputArr[index]['key'], this.apiId, this._SfLoader, this.renderKeyData, (errMsg: string) => {
+            this.setError(errMsg); setTimeout(() => {
+              this.clearMessages();
+            }, 3000)
+          }, this.projectId)
         });
 
       }
@@ -1497,7 +1609,7 @@ export class SfIUploader extends LitElement {
   }
 
   processChangeUploadProgress = () => {
-    if(this.uploadProgressReceiver != null) {
+    if (this.uploadProgressReceiver != null) {
       this.uploadProgressUpdater(this.uploadProgressReceiver, this.uploadProgress.progress);
     }
   }
@@ -1505,41 +1617,42 @@ export class SfIUploader extends LitElement {
   initListeners = () => {
 
     this.inputArrInterval = Util.listenForChange(this.inputArr, this.processChangeInput)
-    this. uploadProgressInterval = Util.listenForChange(this.uploadProgress, this.processChangeUploadProgress)
+    this.uploadProgressInterval = Util.listenForChange(this.uploadProgress, this.processChangeUploadProgress)
 
   }
 
   prepopulateInputs = () => {
 
     const arr = JSON.parse(this.prepopulatedInputArr);
-    
+    this.jobIds = []
     this.inputArr = [];
-    for(var i = 0; i < arr.length; i++) {
+    for (var i = 0; i < arr.length; i++) {
       const obj: any = {};
       obj['key'] = arr[i]['key'];
       obj['file'] = {};
       obj['file']['name'] = arr[i]['filename'] ?? (arr[i]['key'] + '.' + arr[i]['ext']);
       obj['file']['ext'] = arr[i]['ext'];
       obj['ext'] = arr[i]['ext'];
-      if(arr[i]['jobId'] != null) {
+      if (arr[i]['jobId'] != null) {
         obj['jobId'] = arr[i]['jobId']
       }
-      if(arr[i]['arrWords'] != null) {
+      if (arr[i]['arrWords'] != null) {
         obj['arrWords'] = arr[i]['arrWords']
         obj['arrWordsMeta'] = arr[i]['arrWordsMeta']
       }
       this.inputArr.push(obj);
     }
-    if(arr.length === 0) {
+    if (arr.length === 0) {
       this.inputArr = [];
     }
-    for(var i = 0; i < arr.length; i++) {
-      if(arr[i]['jobId'] != null && arr[i]['arrWords'] == null) {
+    console.log("prepopulated input arr", this.inputArr, arr);
+    for (var i = 0; i < arr.length; i++) {
+      if (arr[i]['jobId'] != null && arr[i]['arrWords'] == null) {
         this.executeAndUpdateExtract(arr[i]['jobId'], i);
       }
     }
 
-    if(this.mode == "view"){
+    if (this.mode == "view") {
       console.log("uploader view mode")
     }
 
@@ -1555,27 +1668,27 @@ export class SfIUploader extends LitElement {
 
   isUploadValid = async () => {
     let flag = true
-    if(this.inputArr.length === 0){
+    if (this.inputArr.length === 0) {
       flag = false
-    }else{
-      for(var j = 0; j < this.inputArr.length; j++) {
-        if(this.inputArr[j].file == null) {
+    } else {
+      for (var j = 0; j < this.inputArr.length; j++) {
+        if (this.inputArr[j].file == null) {
           flag = false
           break
         } else if (this.inputArr[j]["arrWords"] != null) {
 
         } else if (this.inputArr[j]["jobId"] != null) {
-          if(this.extract.toLowerCase() == "yes" && this.getExtractableExtensions().indexOf(this.inputArr[j]["ext"]) >= 0){
+          if (this.extract.toLowerCase() == "yes" && this.getExtractableExtensions().indexOf(this.inputArr[j]["ext"]) >= 0) {
             flag = false;
             break
           }
         } else if (this.inputArr[j]["key"] != null) {
-          if(this.extract.toLowerCase() == "yes" && this.getExtractableExtensions().indexOf(this.inputArr[j]["ext"]) >= 0){
+          if (this.extract.toLowerCase() == "yes" && this.getExtractableExtensions().indexOf(this.inputArr[j]["ext"]) >= 0) {
             flag = false;
             break;
           }
-          
-        }else {
+
+        } else {
           flag = false
           break;
         }
@@ -1583,7 +1696,7 @@ export class SfIUploader extends LitElement {
     }
     console.log("isUploadVaid called", flag, this.inputArr);
     this.uploadValid = flag
-    const event = new CustomEvent('uploadValid', {detail: {uploadValid: this.uploadValid}, bubbles: true, composed: true});
+    const event = new CustomEvent('uploadValid', { detail: { uploadValid: this.uploadValid }, bubbles: true, composed: true });
     this.dispatchEvent(event);
   }
 
@@ -1596,24 +1709,24 @@ export class SfIUploader extends LitElement {
     this.loadMode();
 
   }
-  
+
   override connectedCallback() {
     super.connectedCallback()
   }
 
   override disconnectedCallback() {
-    if(this.inputArrInterval != null){
+    if (this.inputArrInterval != null) {
       clearInterval(this.inputArrInterval);
     }
-    if(this.uploadProgressInterval != null){
+    if (this.uploadProgressInterval != null) {
       clearInterval(this.uploadProgressInterval);
     }
     super.disconnectedCallback()
   }
-  
+
   override render() {
-    if(this.mode == "view"){
-      if(this.hidepreview == "yes"){
+    if (this.mode == "view") {
+      if (this.hidepreview == "yes") {
         return html`
               
           <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -1642,7 +1755,7 @@ export class SfIUploader extends LitElement {
             <div class="loader-element"></div>
           </div>
         `;
-      }else{
+      } else {
         return html`
               
           <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -1657,7 +1770,7 @@ export class SfIUploader extends LitElement {
           </div>
         `;
       }
-    }else{
+    } else {
       return html`
             
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
