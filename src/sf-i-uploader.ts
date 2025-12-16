@@ -6,11 +6,13 @@
 
 
 import { LitElement, html, css, PropertyValueMap } from 'lit';
-import { customElement, query, property } from 'lit/decorators.js';
+import { customElement, query, property, state } from 'lit/decorators.js';
 import Util from './util';
 import Api from './api';
 /* eslint-disable import/no-default-export */
-import pdfjs from '@bundled-es-modules/pdfjs-dist';//eslint-disable import/no-default-export
+import pdfjs from '@bundled-es-modules/pdfjs-dist/build/pdf';//eslint-disable import/no-default-export
+// import {getDocument} from '@bundled-es-modules/pdfjs-dist/build/pdf';//eslint-disable import/no-default-export
+
 // import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
 
 // pdfjs.GlobalWorkerOptions.workerSrc =
@@ -47,6 +49,7 @@ export class SfIUploader extends LitElement {
   // prepopulatedInputArr: string = "[{\"key\":\"3deb2dc2-dddc-4560-a5f2-d4a137429e59\",\"file\":{\"name\":\"3deb2dc2-dddc-4560-a5f2-d4a137429e59.pdf\",\"ext\":\"pdf\"},\"ext\":\"pdf\"},{\"key\":\"2050925c-db78-4a6c-ad75-cfa898fc64b2\",\"file\":{\"name\":\"2050925c-db78-4a6c-ad75-cfa898fc64b2.pdf\",\"ext\":\"pdf\"},\"ext\":\"pdf\"}]";
   // prepopulatedInputArr: string = "[{\"arrWords\":[],\"arrWordsMeta\":{\"PAGE\":1},\"jobId\":\"1dc1f5ad1d6d9b85e4b474b15725d4e7f8ed4beeea173bdb3988b9563bee2521\",\"key\":\"6b9ec22d-20d0-4d2c-b92c-748a0f0bc8ff\",\"ext\":\"jpg\"}]";
   // prepopulatedInputArr: string = "[{\"key\":\"9ab1ac91-60cc-4089-8c8e-64c5f5a2b8c3\",\"filename\":\"Business Continuity Policy.pdf\",\"ext\":\"pdf\"}]";
+  // prepopulatedInputArr: string = "[{\"key\":\"65aaee87-8639-498a-b521-814368229e4b\",\"filename\":\"protected.pdf\",\"ext\":\"pdf\"}]";
   prepopulatedInputArr: string = "[]";
 
 
@@ -287,6 +290,24 @@ export class SfIUploader extends LitElement {
       border-radius: 10px;
       z-index: 97;
     }
+    #password-container {
+      width: 90%;
+      margin-left: 5%;
+      height: 90vh;
+      margin-top: 5vh;
+      position: fixed;
+      left: 0px;
+      top: 0px;
+      background-color: #efefef;
+      box-shadow: 1px 1px 10px 0 rgba(0, 0, 0, 0.25), -1px -1px 10px 0 rgba(255, 255, 255, 0.6);
+      border-top: solid 1px rgba(255, 255, 255, 0.3);
+      border-left: solid 1px rgba(255, 255, 255, 0.3);
+      border-bottom: solid 1px rgba(0, 0, 0, 0.1);
+      border-right: solid 1px rgba(0, 0, 0, 0.1);
+      overflow-y: auto;
+      border-radius: 10px;
+      z-index: 98;
+    }
 
     .w-100 {
       width: 100%;
@@ -402,6 +423,10 @@ export class SfIUploader extends LitElement {
     .align-center {
       align-items: center;
     }
+
+    .align-stretch {
+      align-items: stretch;
+    }
     
     .lds-dual-ring {
       display: inline-block;
@@ -510,6 +535,9 @@ export class SfIUploader extends LitElement {
     .p-5 {
       padding: 5px;
     }
+    .p-20 {
+      padding: 20px;
+    }
 
     .m-5 {
       margin: 5px;
@@ -587,6 +615,9 @@ export class SfIUploader extends LitElement {
         66%{background-size:calc(100%/3) 100%,calc(100%/3) 100%,calc(100%/3) 0%  }
     }
     .pdf-canvas-thumbnail {
+      width:200px
+    }
+    .pdf-canvas-error {
       width:200px
     }
     .pdf-canvas {
@@ -752,6 +783,10 @@ export class SfIUploader extends LitElement {
     this.queueRenderPage(this.pageNum, canvas, scale, ctx);
   }
 
+  @state() private showPasswordModal = false;
+  @state() private isPasswordIncorrect = false;
+  private passwordCallback: ((password: string) => void) | null = null; // To store the pdf.js resume function
+
   expandPdfDetail = async (ext: string, data: string, fromMaximize = false) => {
     console.log('rendering detail', ext, fromMaximize)
     let detailHtml = '';
@@ -791,8 +826,29 @@ export class SfIUploader extends LitElement {
 
     });
     pdfjs.GlobalWorkerOptions.workerSrc = await this.loadWorkerURL("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.6.172/pdf.worker.min.js");
-    const pdfjsLib = pdfjs;
-    var loadingTask = pdfjsLib.getDocument({ data: atob(data.replace("data:application/pdf;base64,", "")) });
+    // const pdfjsLib = pdfjs;
+    var loadingTask = pdfjs.getDocument({ data: atob(data.replace("data:application/pdf;base64,", "")) });
+
+    loadingTask.onPassword = (updatePassword: (password: string) => void, reason: number) => {
+      console.log('Password required callback triggered with reason:', reason);
+      // 'updatePassword' is a function we must call to give pdf.js the password
+      this.passwordCallback = updatePassword;
+
+      // Update Lit state to show your UI modal
+      this.showPasswordModal = true;
+
+      if (reason === pdfjs.PasswordResponses.INCORRECT_PASSWORD) {
+        this.isPasswordIncorrect = true;
+        console.log("Incorrect password, please try again.");
+      } else {
+        this.isPasswordIncorrect = false;
+        (this.shadowRoot?.querySelector('#password-input') as HTMLInputElement).value = "";
+      }
+
+      // Force update if needed (Lit usually handles this via @state properties)
+      this.requestUpdate();
+    };
+
     var canvas: any = this._SfDetailContainer.querySelector('#pdf-canvas');
     var ctx = canvas.getContext('2d');
     var scale = 1.2;
@@ -816,17 +872,34 @@ export class SfIUploader extends LitElement {
     }, function (reason: any) {
       // PDF loading error
       if (reason.name === 'PasswordException') {
-        if (reason.code === pdfjsLib.PasswordResponses.NEED_PASSWORD) {
+        if (reason.code === pdfjs.PasswordResponses.NEED_PASSWORD) {
           console.log("Password required!");
         }
-        if (reason.code === pdfjsLib.PasswordResponses.INCORRECT_PASSWORD) {
+        if (reason.code === pdfjs.PasswordResponses.INCORRECT_PASSWORD) {
           console.log("Incorrect password!");
         }
-      }else{
+      } else {
         console.error(reason)
       }
     });
   }
+
+  handlePasswordSubmit() {
+    // Get value from your input field in shadow DOM
+    const input = this.shadowRoot?.querySelector('#password-input') as HTMLInputElement;
+    const password = input?.value || "";
+
+    if (this.passwordCallback) {
+      // This resumes the pdf.js loading process!
+      this.showPasswordModal = false;
+      this.passwordCallback(password);
+    }
+  }
+  handlePasswordClose() {
+    (this._SfDetailContainer as HTMLDivElement)?.querySelector('#button-detail-cancel')?.dispatchEvent(new Event('click'));
+    this.showPasswordModal = false;
+  }
+
   loadWorkerURL = async (url: string): Promise<string> => {
     return new Promise((resolve, reject) => {
       const xmlhttp = new XMLHttpRequest();
@@ -997,13 +1070,14 @@ export class SfIUploader extends LitElement {
         html += '<div class="d-flex justify-center align-center" part="pdf-thumbnail-container">';
         if (!hidePreview) {
           html += '<canvas id="pdf-canvas-thumbnail" class="pdf-canvas-thumbnail", part="pdf-canvas-thumbnail"></canvas>';
+          html += '<div id="pdf-canvas-error" class="pdf-canvas-error hide" part="pdf-canvas-error"></div>';
         }
         if (this.maximize == "yes") {
           html += '<button id="button-expand-pdf" part="button-icon"><span class="material-icons">open_in_new</span></button>';
         }
         html += '</div>';
         (this._SfUploadContainer as HTMLDivElement).innerHTML = html;
-        console.log(html, (this._SfUploadContainer as HTMLDivElement), (this._SfUploadContainer as HTMLDivElement).innerHTML);
+        // console.log(html, (this._SfUploadContainer as HTMLDivElement), (this._SfUploadContainer as HTMLDivElement).innerHTML);
         (this._SfUploadContainer as HTMLDivElement).style.display = 'flex';
 
         if (this.maximize == "yes") {
@@ -1021,10 +1095,10 @@ export class SfIUploader extends LitElement {
         }
         if (!hidePreview) {
           pdfjs.GlobalWorkerOptions.workerSrc = await this.loadWorkerURL("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.6.172/pdf.worker.min.js");
-          const pdfjsLib = pdfjs;
+          // const pdfjsLib = pdfjs;
 
           // Using DocumentInitParameters object to load binary data.
-          var loadingTask = pdfjsLib.getDocument({ data: atob(data.replace("data:application/pdf;base64,", "")) });
+          var loadingTask = pdfjs.getDocument({ data: atob(data.replace("data:application/pdf;base64,", "")) });
 
           var canvas: any = this._SfUploadContainer.querySelector('#pdf-canvas-thumbnail');
           var ctx = canvas.getContext('2d');
@@ -1042,7 +1116,25 @@ export class SfIUploader extends LitElement {
             thisObj.renderPdfPage(thisObj.pageNum, canvas, scale, ctx)
           }, function (reason: any) {
             // PDF loading error
-            console.error(reason);
+            if (reason.name === 'PasswordException') {
+              if (reason.code === pdfjs.PasswordResponses.NEED_PASSWORD) {
+                console.log("Password required!");
+                const pdfCanvas = (thisObj._SfUploadContainer as HTMLDivElement).querySelector('#pdf-canvas-thumbnail');
+                if(pdfCanvas != null){
+                    pdfCanvas.classList.add("hide");
+                }
+                const pdfCanvasError = (thisObj._SfUploadContainer as HTMLDivElement).querySelector('#pdf-canvas-error');
+                if(pdfCanvasError != null){
+                    pdfCanvasError.innerHTML = "Password protected. Preview hidden.";
+                    pdfCanvasError.classList.remove("hide");
+                }
+              }
+              if (reason.code === pdfjs.PasswordResponses.INCORRECT_PASSWORD) {
+                console.log("Incorrect password!");
+              }
+            } else {
+              console.error(reason)
+            }
           });
         }
       } else if (this.maximize == "yes") {
@@ -1738,6 +1830,18 @@ export class SfIUploader extends LitElement {
             <div id="detail-container" class="hide d-flex flex-col" part="detail-container">
 
             </div>
+            <div id="password-container" class="${this.showPasswordModal ? "" : "hide"} d-flex flex-col align-stretch p-20" part="password-container">
+              <div id="password-content-controls" class="d-flex justify-between align-center">
+                <button class="invisible" part="button-icon"><span class="material-icons">close</span></button>
+                <h3>Password Protected</h3>
+                <button id="password-close" @click="${this.handlePasswordClose}" part="button-icon"><span class="material-icons">close</span></button>
+              </div>
+              ${this.isPasswordIncorrect ? html`<p class="m-20" style="color:red" part="password-error">Incorrect password</p>` : ''}
+              
+              <input part="input" class="m-20" type="password" id="password-input" placeholder="Enter Password" />
+              
+              <button part="button" class="m-20" @click="${this.handlePasswordSubmit}">Unlock</button>
+            </div>
           </div>
           <div class="d-flex justify-between">
               <div class="lb"></div>
@@ -1767,6 +1871,18 @@ export class SfIUploader extends LitElement {
             <div id="detail-container" class="hide d-flex flex-col" part="detail-container">
 
             </div>
+            <div id="password-container" class="${this.showPasswordModal ? "" : "hide"} d-flex flex-col align-stretch p-20" part="password-container">
+              <div id="password-content-controls" class="d-flex justify-between align-center">
+                <button class="invisible" part="button-icon"><span class="material-icons">close</span></button>
+                <h3>Password Protected</h3>
+                <button id="password-close" @click="${this.handlePasswordClose}" part="button-icon"><span class="material-icons">close</span></button>
+              </div>
+              ${this.isPasswordIncorrect ? html`<p class="m-20" style="color:red" part="password-error">Incorrect password</p>` : ''}
+              
+              <input part="input" class="m-20" type="password" id="password-input" placeholder="Enter Password" />
+              
+              <button part="button" class="m-20" @click="${this.handlePasswordSubmit}">Unlock</button>
+            </div>
           </div>
         `;
       }
@@ -1783,7 +1899,18 @@ export class SfIUploader extends LitElement {
           <div id="detail-container" class="hide d-flex flex-col" part="detail-container">
 
           </div>
-
+          <div id="password-container" class="${this.showPasswordModal ? "" : "hide"} d-flex flex-col align-stretch p-20" part="password-container">
+            <div id="password-content-controls" class="d-flex justify-between align-center">
+              <button class="invisible" part="button-icon"><span class="material-icons">close</span></button>
+              <h3>Password Protected</h3>
+              <button id="password-close" @click="${this.handlePasswordClose}" part="button-icon"><span class="material-icons">close</span></button>
+            </div>
+            ${this.isPasswordIncorrect ? html`<p class="m-20" style="color:red" part="password-error">Incorrect password</p>` : ''}
+            
+            <input part="input" class="m-20" type="password" id="password-input" placeholder="Enter Password" />
+            
+            <button part="button" class="m-20" @click="${this.handlePasswordSubmit}">Unlock</button>
+          </div>
         </div>
         <div class="d-flex justify-between">
             <div class="lb"></div>
