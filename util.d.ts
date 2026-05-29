@@ -2,10 +2,14 @@
 export declare const newUuidV4: () => string;
 declare function readCookie(key: string): string;
 declare function callApi(url: string, data: string, authorization: any): Promise<unknown>;
+declare function callApiPresignedDelete(url: string): Promise<XMLHttpRequest>;
+declare function callApiPresignedGet(url: string): Promise<unknown>;
 declare function sleep(ms: number): Promise<unknown>;
 declare function formatFileSize(bytes: number): string;
 declare const exportFunctions: {
     callApi: typeof callApi;
+    callApiPresignedGet: typeof callApiPresignedGet;
+    callApiPresignedDelete: typeof callApiPresignedDelete;
     validateName: (name: string) => boolean;
     readCookie: typeof readCookie;
     listenForChange: (_var: any, cb: any) => NodeJS.Timer;

@@ -50,6 +50,8 @@ export class SfIUploader extends LitElement {
   // prepopulatedInputArr: string = "[{\"arrWords\":[],\"arrWordsMeta\":{\"PAGE\":1},\"jobId\":\"1dc1f5ad1d6d9b85e4b474b15725d4e7f8ed4beeea173bdb3988b9563bee2521\",\"key\":\"6b9ec22d-20d0-4d2c-b92c-748a0f0bc8ff\",\"ext\":\"jpg\"}]";
   // prepopulatedInputArr: string = "[{\"key\":\"9ab1ac91-60cc-4089-8c8e-64c5f5a2b8c3\",\"filename\":\"Business Continuity Policy.pdf\",\"ext\":\"pdf\"}]";
   // prepopulatedInputArr: string = "[{\"key\":\"65aaee87-8639-498a-b521-814368229e4b\",\"filename\":\"protected.pdf\",\"ext\":\"pdf\"}]";
+  // prepopulatedInputArr: string = "[{\"key\":\"da9310df-85cc-4305-a84f-7fd2539e3445\",\"ext\":\"png\"}]";
+  // prepopulatedInputArr: string = "[{\"key\":\"a8683874-3c70-400e-8918-20b0a7cf7159\",\"filename\":\"CKPL_Paysheet_Assam Plant_Mar-2026.xlsx\",\"ext\":\"xlsx\"}]";
   prepopulatedInputArr: string = "[]";
 
 
@@ -101,6 +103,9 @@ export class SfIUploader extends LitElement {
   apiId: string = "qegqubqm14";
 
   @property()
+  apiIdRegion: string = "us-east-1";
+
+  @property()
   extract: string = "yes";
 
   @property()
@@ -116,6 +121,7 @@ export class SfIUploader extends LitElement {
   extractJobId: string = "";
 
   @property()
+  // docType: string = "IN_FL_SXHTWNPRVT_DOP_IC";
   docType: string = "";
 
   @property({ type: Number })
@@ -1033,7 +1039,7 @@ export class SfIUploader extends LitElement {
         if (this.maximize == "yes") {
           (this._SfUploadContainer.querySelector('#button-open-in-new-tab') as HTMLButtonElement).addEventListener('click', () => {
             if (hidePreview) {
-              Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderMaximize, (errMsg: string) => {
+              Api.getKeyData(this.inputArr[0]['key'], this.apiId, this.apiIdRegion, this._SfLoader, this.renderMaximize, (errMsg: string) => {
                 this.setError(errMsg); setTimeout(() => {
                   this.clearMessages();
                 }, 3000)
@@ -1083,7 +1089,7 @@ export class SfIUploader extends LitElement {
         if (this.maximize == "yes") {
           (this._SfUploadContainer.querySelector('#button-expand-pdf') as HTMLButtonElement).addEventListener('click', () => {
             if (hidePreview) {
-              Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.expandPdfDetail, (errMsg: string) => {
+              Api.getKeyData(this.inputArr[0]['key'], this.apiId, this.apiIdRegion, this._SfLoader, this.expandPdfDetail, (errMsg: string) => {
                 this.setError(errMsg); setTimeout(() => {
                   this.clearMessages();
                 }, 3000)
@@ -1120,13 +1126,13 @@ export class SfIUploader extends LitElement {
               if (reason.code === pdfjs.PasswordResponses.NEED_PASSWORD) {
                 console.log("Password required!");
                 const pdfCanvas = (thisObj._SfUploadContainer as HTMLDivElement).querySelector('#pdf-canvas-thumbnail');
-                if(pdfCanvas != null){
-                    pdfCanvas.classList.add("hide");
+                if (pdfCanvas != null) {
+                  pdfCanvas.classList.add("hide");
                 }
                 const pdfCanvasError = (thisObj._SfUploadContainer as HTMLDivElement).querySelector('#pdf-canvas-error');
-                if(pdfCanvasError != null){
-                    pdfCanvasError.innerHTML = "Password protected. Preview hidden.";
-                    pdfCanvasError.classList.remove("hide");
+                if (pdfCanvasError != null) {
+                  pdfCanvasError.innerHTML = "Password protected. Preview hidden.";
+                  pdfCanvasError.classList.remove("hide");
                 }
               }
               if (reason.code === pdfjs.PasswordResponses.INCORRECT_PASSWORD) {
@@ -1146,7 +1152,7 @@ export class SfIUploader extends LitElement {
         (this._SfUploadContainer as HTMLDivElement).style.display = 'flex';
         (this._SfUploadContainer as HTMLDivElement).querySelector('#download-button')?.addEventListener('click', () => {
           if (hidePreview) {
-            Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderDownload, (errMsg: string) => {
+            Api.getKeyData(this.inputArr[0]['key'], this.apiId, this.apiIdRegion, this._SfLoader, this.renderDownload, (errMsg: string) => {
               this.setError(errMsg); setTimeout(() => {
                 this.clearMessages();
               }, 3000)
@@ -1221,11 +1227,26 @@ export class SfIUploader extends LitElement {
 
   }
 
+  mimeToExtMap: Record<string, string> = {
+    "application/pdf": "pdf",
+    "application/json": "json",
+    "text/plain": "txt",
+    "text/csv": "csv",
+    "image/png": "png",
+    "image/jpeg": "jpg",
+
+    // Office formats
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+    "application/vnd.ms-excel": "xls",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+    "application/msword": "doc",
+  };
+
   downloadBase64 = (base64Input: string, fallbackExt = "bin", fallbackMime = "application/octet-stream") => {
     let base64Data: string;
     let mimeType: string = fallbackMime;
     let ext: string = fallbackExt;
-
+    console.log('downloading base64 data', ext)
     // If input has a data URI prefix
     if (base64Input.startsWith("data:")) {
       const matches = base64Input.match(/^data:(.+);base64,(.*)$/);
@@ -1236,7 +1257,15 @@ export class SfIUploader extends LitElement {
         // Try to guess extension from MIME type
         const parts = mimeType.split("/");
         if (parts.length === 2) {
-          ext = parts[1];
+          if (this.mimeToExtMap[mimeType]) {
+            ext = this.mimeToExtMap[mimeType];
+          } else {
+            // fallback (last part after slash, but sanitized)
+            const parts = mimeType.split("/");
+            if (parts.length === 2) {
+              ext = parts[1].split(".").pop() || fallbackExt;
+            }
+          }
         }
       } else {
         throw new Error("Invalid base64 data URI");
@@ -1289,7 +1318,7 @@ export class SfIUploader extends LitElement {
 
     do {
 
-      resultExtractStatus = await Api.getExtractStatus(jobId, this.apiId, this._SfLoader, this.setError, this.projectId);
+      resultExtractStatus = await Api.getExtractStatus(jobId, this.apiId, this.apiIdRegion, this._SfLoader, this.setError, this.projectId);
       console.log(resultExtractStatus)
       await Util.sleep(5000);
 
@@ -1323,7 +1352,7 @@ export class SfIUploader extends LitElement {
 
     // this.extractState.state = 1;
     let filename = this.inputArr[fileIndex]['filename'];
-    const resultExtract = await Api.getExtract(key, fileIndex, this.dataPassthrough, this.apiId, this._SfLoader, (msg: string) => { this.setErrorMaliciousContent(msg, fileIndex) }, this.callbackUrlHost, this.callbackUrlPath, parseInt(fileIndex) == 0 ? this.docType : "", this.projectId, filename, this.emailcontent);
+    const resultExtract = await Api.getExtract(key, fileIndex, this.dataPassthrough, this.apiId, this.apiIdRegion, this._SfLoader, (msg: string) => { this.setErrorMaliciousContent(msg, fileIndex) }, this.callbackUrlHost, this.callbackUrlPath, parseInt(fileIndex) == 0 ? this.docType : "", this.projectId, filename, this.emailcontent);
     if (resultExtract == null) {
       return null;
     }
@@ -1375,10 +1404,10 @@ export class SfIUploader extends LitElement {
       const run = async () => {
 
         const chunks = this.chunkify(reader.result as string);
-        await Api.uploadMeta(key, fileName, ext, chunks?.length + "", this.apiId, this._SfLoader, this.setError, this.projectId)
+        await Api.uploadMeta(key, fileName, ext, chunks?.length + "", this.apiId, this.apiIdRegion, this._SfLoader, this.setError, this.projectId)
         for (var i = 0; i < chunks!.length; i++) {
           this.uploadProgressReceiver = (this._SfUploadContainer as HTMLDivElement).querySelector('#upload-row-' + fileIndex);
-          await Api.uploadBlock(key, i + "", chunks![i] + "", this.apiId, this._SfLoader, this.setError, this.projectId);
+          await Api.uploadBlock(key, i + "", chunks![i] + "", this.apiId, this.apiIdRegion, this._SfLoader, this.setError, this.projectId);
           this.uploadProgress.progress = parseInt((((i + 1) * 100) / chunks!.length) + "");
         }
         for (var i = 0; i < this.inputArr.length; i++) {
@@ -1434,7 +1463,7 @@ export class SfIUploader extends LitElement {
         if (this.hidepreview == "yes") {
           this.renderKeyData(this.inputArr[0]['ext'], "", true);
         } else {
-          Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderKeyData, (errMsg: string) => {
+          Api.getKeyData(this.inputArr[0]['key'], this.apiId, this.apiIdRegion, this._SfLoader, this.renderKeyData, (errMsg: string) => {
             this.setError(errMsg); setTimeout(() => {
               this.clearMessages();
             }, 3000)
@@ -1597,7 +1626,7 @@ export class SfIUploader extends LitElement {
         htmlStr += '</div>';
         if (this.docType.length > 2 && i == 0) {
           if (this.docType != "" && (this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null))) {
-            Api.getMessageByDocType(this.docType, this.apiId, this._SfLoader, this.renderMessageData, this.setError);
+            Api.getMessageByDocType(this.docType, this.apiId, this.apiIdRegion, this._SfLoader, this.renderMessageData, this.setError);
           }
         }
       }
@@ -1634,7 +1663,7 @@ export class SfIUploader extends LitElement {
           const ext = input.files![0].name.split(".")[input.files![0].name.split(".").length - 1]
           if (input.files![0].size > this.maxSize) {
             this.setError('Maximum allowed file size is ' + (this.maxSize / 1024) + ' KB');
-            Api.largeFileWarning(Util.formatFileSize(input.files![0].size), this.apiId, this._SfLoader, this.setError, this.projectId)
+            Api.largeFileWarning(Util.formatFileSize(input.files![0].size), this.apiId, this.apiIdRegion, this._SfLoader, this.setError, this.projectId)
             setTimeout(() => {
               this.clearMessages();
               this.inputArr[index] = {};
@@ -1684,7 +1713,7 @@ export class SfIUploader extends LitElement {
 
         (this._SfUploadContainer as HTMLDivElement).querySelector('#button-open-' + i)?.addEventListener('click', (ev: any) => {
           const index = ev.currentTarget.id.split("-")[2];
-          Api.getKeyData(this.inputArr[index]['key'], this.apiId, this._SfLoader, this.renderKeyData, (errMsg: string) => {
+          Api.getKeyData(this.inputArr[index]['key'], this.apiId, this.apiIdRegion, this._SfLoader, this.renderKeyData, (errMsg: string) => {
             this.setError(errMsg); setTimeout(() => {
               this.clearMessages();
             }, 3000)

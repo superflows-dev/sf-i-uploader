@@ -10,10 +10,13 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 import { LitElement, html, css } from 'lit';
-import { customElement, query, property } from 'lit/decorators.js';
+import { customElement, query, property, state } from 'lit/decorators.js';
 import Util from './util';
 import Api from './api';
-import pdfjs from '@bundled-es-modules/pdfjs-dist';
+/* eslint-disable import/no-default-export */
+import pdfjs from '@bundled-es-modules/pdfjs-dist/build/pdf'; //eslint-disable import/no-default-export
+// import {getDocument} from '@bundled-es-modules/pdfjs-dist/build/pdf';//eslint-disable import/no-default-export
+// import { GlobalWorkerOptions, getDocument } from 'pdfjs-dist';
 // pdfjs.GlobalWorkerOptions.workerSrc =
 //   '/node_modules/@bundled-es-modules/pdfjs-dist/build/pdf.worker.min.js';
 // pdfjs.GlobalWorkerOptions.workerSrc =
@@ -36,6 +39,22 @@ DB: partitionKey, rangeKey, values
  * @property selectedValue - callback function
  */
 let SfIUploader = class SfIUploader extends LitElement {
+    handlePasswordSubmit() {
+        var _a;
+        // Get value from your input field in shadow DOM
+        const input = (_a = this.shadowRoot) === null || _a === void 0 ? void 0 : _a.querySelector('#password-input');
+        const password = (input === null || input === void 0 ? void 0 : input.value) || "";
+        if (this.passwordCallback) {
+            // This resumes the pdf.js loading process!
+            this.showPasswordModal = false;
+            this.passwordCallback(password);
+        }
+    }
+    handlePasswordClose() {
+        var _a, _b;
+        (_b = (_a = this._SfDetailContainer) === null || _a === void 0 ? void 0 : _a.querySelector('#button-detail-cancel')) === null || _b === void 0 ? void 0 : _b.dispatchEvent(new Event('click'));
+        this.showPasswordModal = false;
+    }
     constructor() {
         super();
         // prepopulatedInputArr: string = "[{\"key\":\"2c39a366-1532-49a1-891e-bdcca8d5d215\",\"ext\": \"jpg\"},{\"key\": \"730e310f-5ae6-4641-a2af-eae3a535b6e9\",\"ext\": \"jpg\"}]";
@@ -46,6 +65,10 @@ let SfIUploader = class SfIUploader extends LitElement {
         // prepopulatedInputArr: string = "[{\"filename\":\"logo.png\",\"key\":\"5e850fa4-19de-4ad0-bcd1-fe7e8d9335d5\",\"ext\":\"png\"}]";
         // prepopulatedInputArr: string = "[{\"key\":\"3deb2dc2-dddc-4560-a5f2-d4a137429e59\",\"file\":{\"name\":\"3deb2dc2-dddc-4560-a5f2-d4a137429e59.pdf\",\"ext\":\"pdf\"},\"ext\":\"pdf\"},{\"key\":\"2050925c-db78-4a6c-ad75-cfa898fc64b2\",\"file\":{\"name\":\"2050925c-db78-4a6c-ad75-cfa898fc64b2.pdf\",\"ext\":\"pdf\"},\"ext\":\"pdf\"}]";
         // prepopulatedInputArr: string = "[{\"arrWords\":[],\"arrWordsMeta\":{\"PAGE\":1},\"jobId\":\"1dc1f5ad1d6d9b85e4b474b15725d4e7f8ed4beeea173bdb3988b9563bee2521\",\"key\":\"6b9ec22d-20d0-4d2c-b92c-748a0f0bc8ff\",\"ext\":\"jpg\"}]";
+        // prepopulatedInputArr: string = "[{\"key\":\"9ab1ac91-60cc-4089-8c8e-64c5f5a2b8c3\",\"filename\":\"Business Continuity Policy.pdf\",\"ext\":\"pdf\"}]";
+        // prepopulatedInputArr: string = "[{\"key\":\"65aaee87-8639-498a-b521-814368229e4b\",\"filename\":\"protected.pdf\",\"ext\":\"pdf\"}]";
+        // prepopulatedInputArr: string = "[{\"key\":\"da9310df-85cc-4305-a84f-7fd2539e3445\",\"ext\":\"png\"}]";
+        // prepopulatedInputArr: string = "[{\"key\":\"a8683874-3c70-400e-8918-20b0a7cf7159\",\"filename\":\"CKPL_Paysheet_Assam Plant_Mar-2026.xlsx\",\"ext\":\"xlsx\"}]";
         this.prepopulatedInputArr = "[]";
         this.mode = "edit";
         this.maximize = "no";
@@ -68,14 +91,17 @@ let SfIUploader = class SfIUploader extends LitElement {
         this.projectId = "";
         this.maxSize = 512000;
         this.apiId = "qegqubqm14";
+        this.apiIdRegion = "us-east-1";
         this.extract = "yes";
         this.newButtonText = "New Upload";
         this.allowedExtensions = "[\"jpg\", \"png\", \"pdf\"]";
         this.extractableExtensions = "[\"jpg\", \"png\", \"pdf\"]";
         this.extractJobId = "";
+        // docType: string = "IN_FL_SXHTWNPRVT_DOP_IC";
         this.docType = "";
         this.chunkSize = 900000;
         this.allowDownload = "no";
+        this.emailcontent = "";
         this.getAllowedExtensions = () => {
             return JSON.parse(this.allowedExtensions);
         };
@@ -94,7 +120,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                             arrWords: this.inputArr[i]['arrWords'],
                             arrWordsMeta: this.inputArr[i]['arrWordsMeta'],
                             jobId: this.inputArr[i]['jobId'],
-                            filename: this.inputArr[i]['filename'],
+                            filename: this.inputArr[i]['file']['name'],
                             key: this.inputArr[i]['key'],
                             ext: this.inputArr[i]['ext']
                         });
@@ -102,7 +128,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                     else if (this.inputArr[i]['jobId'] != null) {
                         values.push({
                             jobId: this.inputArr[i]['jobId'],
-                            filename: this.inputArr[i]['filename'],
+                            filename: this.inputArr[i]['file']['name'],
                             key: this.inputArr[i]['key'],
                             ext: this.inputArr[i]['ext']
                         });
@@ -110,14 +136,14 @@ let SfIUploader = class SfIUploader extends LitElement {
                     else if (this.inputArr[i]['ext'] != null) {
                         values.push({
                             key: this.inputArr[i]['key'],
-                            filename: this.inputArr[i]['filename'],
+                            filename: this.inputArr[i]['file']['name'],
                             ext: this.inputArr[i]['ext']
                         });
                     }
                     else {
                         values.push({
                             key: this.inputArr[i]['key'],
-                            filename: this.inputArr[i]['filename'],
+                            filename: this.inputArr[i]['file']['name'],
                             ext: this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1]
                         });
                     }
@@ -134,7 +160,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                             arrWords: this.inputArr[i]['arrWords'],
                             arrWordsMeta: this.inputArr[i]['arrWordsMeta'],
                             jobId: this.inputArr[i]['jobId'],
-                            filename: this.inputArr[i]['filename'],
+                            filename: this.inputArr[i]['file']['name'],
                             key: this.inputArr[i]['key'],
                             ext: this.inputArr[i]['ext']
                         });
@@ -142,7 +168,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                     else if (this.inputArr[i]['jobId'] != null) {
                         values.push({
                             jobId: this.inputArr[i]['jobId'],
-                            filename: this.inputArr[i]['filename'],
+                            filename: this.inputArr[i]['file']['name'],
                             key: this.inputArr[i]['key'],
                             ext: this.inputArr[i]['ext']
                         });
@@ -150,14 +176,14 @@ let SfIUploader = class SfIUploader extends LitElement {
                     else if (this.inputArr[i]['ext'] != null) {
                         values.push({
                             key: this.inputArr[i]['key'],
-                            filename: this.inputArr[i]['filename'],
+                            filename: this.inputArr[i]['file']['name'],
                             ext: this.inputArr[i]['ext']
                         });
                     }
                     else {
                         values.push({
                             key: this.inputArr[i]['key'],
-                            filename: this.inputArr[i]['filename'],
+                            filename: this.inputArr[i]['file']['name'],
                             ext: this.inputArr[i]['file'].name.split(".")[this.inputArr[i]['file'].name.split(".").length - 1]
                         });
                     }
@@ -177,6 +203,7 @@ let SfIUploader = class SfIUploader extends LitElement {
         this.possibleMatches = [[]];
         this.matchArr = [[]];
         this.uploadValid = false;
+        this.jobIds = [];
         this.flow = "";
         // prepareXhr = async (data: any, url: string, loaderElement: any, authorization: any) => {
         //   if(loaderElement != null) {
@@ -284,6 +311,9 @@ let SfIUploader = class SfIUploader extends LitElement {
             this.pageNum++;
             this.queueRenderPage(this.pageNum, canvas, scale, ctx);
         };
+        this.showPasswordModal = false;
+        this.isPasswordIncorrect = false;
+        this.passwordCallback = null; // To store the pdf.js resume function
         this.expandPdfDetail = async (ext, data, fromMaximize = false) => {
             var _a, _b, _c, _d;
             console.log('rendering detail', ext, fromMaximize);
@@ -306,21 +336,40 @@ let SfIUploader = class SfIUploader extends LitElement {
             this._SfDetailContainer.innerHTML = detailHtml;
             this._SfDetailContainer.style.display = 'flex';
             (_a = this._SfDetailContainer.querySelector('#download-pdf-button')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', () => {
-                const a = document.createElement("a");
-                a.style.display = "none";
-                a.href = data;
-                a.download = "download_" + new Date().getTime() + "." + ext;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
+                // const a = document.createElement("a");
+                // a.style.display = "none";
+                // a.href = data;
+                // a.download = "download_" + new Date().getTime() + "." + ext;
+                // document.body.appendChild(a);
+                // a.click();
+                // document.body.removeChild(a);
+                this.downloadBase64(data, ext);
             });
             (_b = this._SfDetailContainer.querySelector('#button-detail-cancel')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', () => {
                 this._SfDetailContainer.innerHTML = '';
                 this._SfDetailContainer.style.display = 'none';
             });
             pdfjs.GlobalWorkerOptions.workerSrc = await this.loadWorkerURL("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.6.172/pdf.worker.min.js");
-            const pdfjsLib = pdfjs;
-            var loadingTask = pdfjsLib.getDocument({ data: atob(data.replace("data:application/pdf;base64,", "")) });
+            // const pdfjsLib = pdfjs;
+            var loadingTask = pdfjs.getDocument({ data: atob(data.replace("data:application/pdf;base64,", "")) });
+            loadingTask.onPassword = (updatePassword, reason) => {
+                var _a;
+                console.log('Password required callback triggered with reason:', reason);
+                // 'updatePassword' is a function we must call to give pdf.js the password
+                this.passwordCallback = updatePassword;
+                // Update Lit state to show your UI modal
+                this.showPasswordModal = true;
+                if (reason === pdfjs.PasswordResponses.INCORRECT_PASSWORD) {
+                    this.isPasswordIncorrect = true;
+                    console.log("Incorrect password, please try again.");
+                }
+                else {
+                    this.isPasswordIncorrect = false;
+                    ((_a = this.shadowRoot) === null || _a === void 0 ? void 0 : _a.querySelector('#password-input')).value = "";
+                }
+                // Force update if needed (Lit usually handles this via @state properties)
+                this.requestUpdate();
+            };
             var canvas = this._SfDetailContainer.querySelector('#pdf-canvas');
             var ctx = canvas.getContext('2d');
             var scale = 1.2;
@@ -342,26 +391,57 @@ let SfIUploader = class SfIUploader extends LitElement {
                 thisObj.renderPdfPage(thisObj.pageNum, canvas, scale, ctx);
             }, function (reason) {
                 // PDF loading error
-                console.error(reason);
+                if (reason.name === 'PasswordException') {
+                    if (reason.code === pdfjs.PasswordResponses.NEED_PASSWORD) {
+                        console.log("Password required!");
+                    }
+                    if (reason.code === pdfjs.PasswordResponses.INCORRECT_PASSWORD) {
+                        console.log("Incorrect password!");
+                    }
+                }
+                else {
+                    console.error(reason);
+                }
             });
         };
         this.loadWorkerURL = async (url) => {
-            let cachedJSDfd = new pdfjs.PromiseCapability();
-            var xmlhttp;
-            xmlhttp = new XMLHttpRequest();
-            //the callback function to be callled when AJAX request comes back
-            xmlhttp.onreadystatechange = function () {
-                if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
-                    var workerJSBlob = new Blob([xmlhttp.responseText], {
-                        type: "text/javascript"
-                    });
-                    cachedJSDfd.resolve(window.URL.createObjectURL(workerJSBlob));
-                }
-            };
-            xmlhttp.open("GET", url, true);
-            xmlhttp.send();
-            return cachedJSDfd.promise;
+            return new Promise((resolve, reject) => {
+                const xmlhttp = new XMLHttpRequest();
+                xmlhttp.onreadystatechange = function () {
+                    if (xmlhttp.readyState === 4) {
+                        if (xmlhttp.status === 200) {
+                            const workerJSBlob = new Blob([xmlhttp.responseText], {
+                                type: "text/javascript"
+                            });
+                            resolve(window.URL.createObjectURL(workerJSBlob));
+                        }
+                        else {
+                            reject(new Error(`Failed to load worker script: ${xmlhttp.status}`));
+                        }
+                    }
+                };
+                xmlhttp.onerror = () => reject(new Error("XHR request failed"));
+                xmlhttp.open("GET", url, true);
+                xmlhttp.send();
+            });
         };
+        //   loadWorkerURL = async (url:string) => {
+        //     let cachedJSDfd = new pdfjs.PromiseCapability();
+        //     var xmlhttp: XMLHttpRequest;
+        //     xmlhttp=new XMLHttpRequest();
+        //     //the callback function to be callled when AJAX request comes back
+        //     xmlhttp.onreadystatechange=function(){
+        //         if (xmlhttp.readyState==4 && xmlhttp.status==200){
+        //             var workerJSBlob = new Blob([xmlhttp.responseText], {
+        //                 type: "text/javascript"
+        //             });
+        //             cachedJSDfd.resolve(window.URL.createObjectURL(workerJSBlob));
+        //         }
+        //     };
+        //     xmlhttp.open("GET",url,true);
+        //     xmlhttp.send();
+        //     return cachedJSDfd.promise;
+        // }
         this.renderMaximize = async (ext, data) => {
             var _a, _b;
             if (ext == "png" || ext == "jpg") {
@@ -411,13 +491,14 @@ let SfIUploader = class SfIUploader extends LitElement {
             }
         };
         this.renderDownload = async (ext, data) => {
-            const a = document.createElement("a");
-            a.style.display = "none";
-            a.href = data;
-            a.download = "download_" + new Date().getTime() + "." + ext;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            // const a = document.createElement("a");
+            // a.style.display = "none";
+            // a.href = data;
+            // a.download = "download_" + new Date().getTime() + "." + ext;
+            // document.body.appendChild(a);
+            // a.click();
+            // document.body.removeChild(a);
+            this.downloadBase64(data, ext);
         };
         this.renderKeyData = async (ext, data, hidePreview = false) => {
             var _a, _b, _c;
@@ -439,7 +520,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                         this._SfUploadContainer.querySelector('#button-open-in-new-tab').addEventListener('click', () => {
                             var _a;
                             if (hidePreview) {
-                                Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderMaximize, (errMsg) => {
+                                Api.getKeyData(this.inputArr[0]['key'], this.apiId, this.apiIdRegion, this._SfLoader, this.renderMaximize, (errMsg) => {
                                     this.setError(errMsg);
                                     setTimeout(() => {
                                         this.clearMessages();
@@ -467,22 +548,23 @@ let SfIUploader = class SfIUploader extends LitElement {
                         });
                     }
                 }
-                else if (ext == "pdf") {
+                else if (ext.toLowerCase() == "pdf") {
                     html += '<div class="d-flex justify-center align-center" part="pdf-thumbnail-container">';
                     if (!hidePreview) {
                         html += '<canvas id="pdf-canvas-thumbnail" class="pdf-canvas-thumbnail", part="pdf-canvas-thumbnail"></canvas>';
+                        html += '<div id="pdf-canvas-error" class="pdf-canvas-error hide" part="pdf-canvas-error"></div>';
                     }
                     if (this.maximize == "yes") {
                         html += '<button id="button-expand-pdf" part="button-icon"><span class="material-icons">open_in_new</span></button>';
                     }
                     html += '</div>';
                     this._SfUploadContainer.innerHTML = html;
-                    console.log(html, this._SfUploadContainer, this._SfUploadContainer.innerHTML);
+                    // console.log(html, (this._SfUploadContainer as HTMLDivElement), (this._SfUploadContainer as HTMLDivElement).innerHTML);
                     this._SfUploadContainer.style.display = 'flex';
                     if (this.maximize == "yes") {
                         this._SfUploadContainer.querySelector('#button-expand-pdf').addEventListener('click', () => {
                             if (hidePreview) {
-                                Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.expandPdfDetail, (errMsg) => {
+                                Api.getKeyData(this.inputArr[0]['key'], this.apiId, this.apiIdRegion, this._SfLoader, this.expandPdfDetail, (errMsg) => {
                                     this.setError(errMsg);
                                     setTimeout(() => {
                                         this.clearMessages();
@@ -496,9 +578,9 @@ let SfIUploader = class SfIUploader extends LitElement {
                     }
                     if (!hidePreview) {
                         pdfjs.GlobalWorkerOptions.workerSrc = await this.loadWorkerURL("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.6.172/pdf.worker.min.js");
-                        const pdfjsLib = pdfjs;
+                        // const pdfjsLib = pdfjs;
                         // Using DocumentInitParameters object to load binary data.
-                        var loadingTask = pdfjsLib.getDocument({ data: atob(data.replace("data:application/pdf;base64,", "")) });
+                        var loadingTask = pdfjs.getDocument({ data: atob(data.replace("data:application/pdf;base64,", "")) });
                         var canvas = this._SfUploadContainer.querySelector('#pdf-canvas-thumbnail');
                         var ctx = canvas.getContext('2d');
                         var scale = 0.8;
@@ -514,7 +596,26 @@ let SfIUploader = class SfIUploader extends LitElement {
                             thisObj.renderPdfPage(thisObj.pageNum, canvas, scale, ctx);
                         }, function (reason) {
                             // PDF loading error
-                            console.error(reason);
+                            if (reason.name === 'PasswordException') {
+                                if (reason.code === pdfjs.PasswordResponses.NEED_PASSWORD) {
+                                    console.log("Password required!");
+                                    const pdfCanvas = thisObj._SfUploadContainer.querySelector('#pdf-canvas-thumbnail');
+                                    if (pdfCanvas != null) {
+                                        pdfCanvas.classList.add("hide");
+                                    }
+                                    const pdfCanvasError = thisObj._SfUploadContainer.querySelector('#pdf-canvas-error');
+                                    if (pdfCanvasError != null) {
+                                        pdfCanvasError.innerHTML = "Password protected. Preview hidden.";
+                                        pdfCanvasError.classList.remove("hide");
+                                    }
+                                }
+                                if (reason.code === pdfjs.PasswordResponses.INCORRECT_PASSWORD) {
+                                    console.log("Incorrect password!");
+                                }
+                            }
+                            else {
+                                console.error(reason);
+                            }
                         });
                     }
                 }
@@ -526,7 +627,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                     this._SfUploadContainer.style.display = 'flex';
                     (_a = this._SfUploadContainer.querySelector('#download-button')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', () => {
                         if (hidePreview) {
-                            Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderDownload, (errMsg) => {
+                            Api.getKeyData(this.inputArr[0]['key'], this.apiId, this.apiIdRegion, this._SfLoader, this.renderDownload, (errMsg) => {
                                 this.setError(errMsg);
                                 setTimeout(() => {
                                     this.clearMessages();
@@ -534,13 +635,14 @@ let SfIUploader = class SfIUploader extends LitElement {
                             }, this.projectId);
                         }
                         else {
-                            const a = document.createElement("a");
-                            a.style.display = "none";
-                            a.href = data;
-                            a.download = "download_" + new Date().getTime() + "." + ext;
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
+                            // const a = document.createElement("a");
+                            // a.style.display = "none";
+                            // a.href = data;
+                            // a.download = "download_" + new Date().getTime() + "." + ext;
+                            // document.body.appendChild(a);
+                            // a.click();
+                            // document.body.removeChild(a);
+                            this.downloadBase64(data, ext);
                         }
                     });
                 }
@@ -576,15 +678,85 @@ let SfIUploader = class SfIUploader extends LitElement {
                     this._SfDetailContainer.style.display = 'none';
                 });
                 (_c = this._SfDetailContainer.querySelector('#download-button')) === null || _c === void 0 ? void 0 : _c.addEventListener('click', () => {
-                    const a = document.createElement("a");
-                    a.style.display = "none";
-                    a.href = data;
-                    a.download = "download_" + new Date().getTime() + "." + ext;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
+                    this.downloadBase64(data, ext);
+                    // const a = document.createElement("a");
+                    // a.style.display = "none";
+                    // a.href = data;
+                    // a.download = "download_" + new Date().getTime() + "." + ext;
+                    // document.body.appendChild(a);
+                    // a.click();
+                    // document.body.removeChild(a);
                 });
             }
+        };
+        this.mimeToExtMap = {
+            "application/pdf": "pdf",
+            "application/json": "json",
+            "text/plain": "txt",
+            "text/csv": "csv",
+            "image/png": "png",
+            "image/jpeg": "jpg",
+            // Office formats
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": "xlsx",
+            "application/vnd.ms-excel": "xls",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "docx",
+            "application/msword": "doc",
+        };
+        this.downloadBase64 = (base64Input, fallbackExt = "bin", fallbackMime = "application/octet-stream") => {
+            let base64Data;
+            let mimeType = fallbackMime;
+            let ext = fallbackExt;
+            console.log('downloading base64 data', ext);
+            // If input has a data URI prefix
+            if (base64Input.startsWith("data:")) {
+                const matches = base64Input.match(/^data:(.+);base64,(.*)$/);
+                if (matches) {
+                    mimeType = matches[1];
+                    base64Data = matches[2];
+                    // Try to guess extension from MIME type
+                    const parts = mimeType.split("/");
+                    if (parts.length === 2) {
+                        if (this.mimeToExtMap[mimeType]) {
+                            ext = this.mimeToExtMap[mimeType];
+                        }
+                        else {
+                            // fallback (last part after slash, but sanitized)
+                            const parts = mimeType.split("/");
+                            if (parts.length === 2) {
+                                ext = parts[1].split(".").pop() || fallbackExt;
+                            }
+                        }
+                    }
+                }
+                else {
+                    throw new Error("Invalid base64 data URI");
+                }
+            }
+            else {
+                // Raw base64 string
+                base64Data = base64Input;
+            }
+            // Convert Base64 → binary
+            const byteChars = atob(base64Data);
+            const byteNumbers = new Array(byteChars.length);
+            for (let i = 0; i < byteChars.length; i++) {
+                byteNumbers[i] = byteChars.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            // Create Blob
+            const blob = new Blob([byteArray], { type: mimeType });
+            // Create object URL
+            const url = URL.createObjectURL(blob);
+            // Create hidden <a>
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = `download_${Date.now()}.${ext}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            // Free memory
+            URL.revokeObjectURL(url);
         };
         this.chunkify = (base64String) => {
             let regex = new RegExp(`.{1,${this.chunkSize}}`, 'g');
@@ -594,17 +766,20 @@ let SfIUploader = class SfIUploader extends LitElement {
         this.executeExtract = async (jobId) => {
             var resultExtractStatus;
             do {
-                resultExtractStatus = await Api.getExtractStatus(jobId, this.apiId, this._SfLoader, this.setError, this.projectId);
+                resultExtractStatus = await Api.getExtractStatus(jobId, this.apiId, this.apiIdRegion, this._SfLoader, this.setError, this.projectId);
                 console.log(resultExtractStatus);
                 await Util.sleep(5000);
-            } while (resultExtractStatus != null && resultExtractStatus.status == "IN_PROGRESS");
-            if (resultExtractStatus != null && resultExtractStatus.status == "SUCCEEDED") {
-                let index = 0;
+            } while (resultExtractStatus == null || (resultExtractStatus != null && resultExtractStatus.status == "IN_PROGRESS"));
+            if (resultExtractStatus != null && resultExtractStatus.status == "SUCCEEDED" && this.jobIds.indexOf(jobId) >= 0) {
+                let index = -1;
                 for (let i = 0; i < this.inputArr.length; i++) {
                     if (this.inputArr[i]['jobId'] == jobId) {
                         index = i;
                         break;
                     }
+                }
+                if (index < 0) {
+                    return;
                 }
                 this.arrWords = [];
                 this.arrWordsMeta = {};
@@ -617,7 +792,8 @@ let SfIUploader = class SfIUploader extends LitElement {
         };
         this.processExtract = async (key, fileIndex) => {
             // this.extractState.state = 1;
-            const resultExtract = await Api.getExtract(key, fileIndex, this.dataPassthrough, this.apiId, this._SfLoader, (msg) => { this.setErrorMaliciousContent(msg, fileIndex); }, this.callbackUrlHost, this.callbackUrlPath, parseInt(fileIndex) == 0 ? this.docType : "", this.projectId);
+            let filename = this.inputArr[fileIndex]['filename'];
+            const resultExtract = await Api.getExtract(key, fileIndex, this.dataPassthrough, this.apiId, this.apiIdRegion, this._SfLoader, (msg) => { this.setErrorMaliciousContent(msg, fileIndex); }, this.callbackUrlHost, this.callbackUrlPath, parseInt(fileIndex) == 0 ? this.docType : "", this.projectId, filename, this.emailcontent);
             if (resultExtract == null) {
                 return null;
             }
@@ -632,6 +808,9 @@ let SfIUploader = class SfIUploader extends LitElement {
             this.setError(msg);
         };
         this.executeAndUpdateExtract = async (jobId, fileIndex) => {
+            if (this.jobIds.indexOf(jobId) < 0) {
+                this.jobIds.push(jobId);
+            }
             await this.executeExtract(jobId);
             let index = 0;
             for (let i = 0; i < this.inputArr.length; i++) {
@@ -658,10 +837,10 @@ let SfIUploader = class SfIUploader extends LitElement {
             reader.onloadend = () => {
                 const run = async () => {
                     const chunks = this.chunkify(reader.result);
-                    await Api.uploadMeta(key, fileName, ext, (chunks === null || chunks === void 0 ? void 0 : chunks.length) + "", this.apiId, this._SfLoader, this.setError, this.projectId);
+                    await Api.uploadMeta(key, fileName, ext, (chunks === null || chunks === void 0 ? void 0 : chunks.length) + "", this.apiId, this.apiIdRegion, this._SfLoader, this.setError, this.projectId);
                     for (var i = 0; i < chunks.length; i++) {
                         this.uploadProgressReceiver = this._SfUploadContainer.querySelector('#upload-row-' + fileIndex);
-                        await Api.uploadBlock(key, i + "", chunks[i] + "", this.apiId, this._SfLoader, this.setError, this.projectId);
+                        await Api.uploadBlock(key, i + "", chunks[i] + "", this.apiId, this.apiIdRegion, this._SfLoader, this.setError, this.projectId);
                         this.uploadProgress.progress = parseInt((((i + 1) * 100) / chunks.length) + "");
                     }
                     for (var i = 0; i < this.inputArr.length; i++) {
@@ -706,7 +885,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                         this.renderKeyData(this.inputArr[0]['ext'], "", true);
                     }
                     else {
-                        Api.getKeyData(this.inputArr[0]['key'], this.apiId, this._SfLoader, this.renderKeyData, (errMsg) => {
+                        Api.getKeyData(this.inputArr[0]['key'], this.apiId, this.apiIdRegion, this._SfLoader, this.renderKeyData, (errMsg) => {
                             this.setError(errMsg);
                             setTimeout(() => {
                                 this.clearMessages();
@@ -866,8 +1045,8 @@ let SfIUploader = class SfIUploader extends LitElement {
                     }
                     htmlStr += '</div>';
                     if (this.docType.length > 2 && i == 0) {
-                        if (this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null)) {
-                            Api.getMessageByDocType(this.docType, this.apiId, this._SfLoader, this.renderMessageData, this.setError);
+                        if (this.docType != "" && (this.inputArr[i].file == null || (this.inputArr[i]["jobId"] == null && this.inputArr[i]["arrWords"] == null && this.inputArr[i]["key"] == null && this.inputArr[i]["progress"] == null))) {
+                            Api.getMessageByDocType(this.docType, this.apiId, this.apiIdRegion, this._SfLoader, this.renderMessageData, this.setError);
                         }
                     }
                 }
@@ -899,7 +1078,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                         const ext = input.files[0].name.split(".")[input.files[0].name.split(".").length - 1];
                         if (input.files[0].size > this.maxSize) {
                             this.setError('Maximum allowed file size is ' + (this.maxSize / 1024) + ' KB');
-                            Api.largeFileWarning(Util.formatFileSize(input.files[0].size), this.apiId, this._SfLoader, this.setError, this.projectId);
+                            Api.largeFileWarning(Util.formatFileSize(input.files[0].size), this.apiId, this.apiIdRegion, this._SfLoader, this.setError, this.projectId);
                             setTimeout(() => {
                                 this.clearMessages();
                                 this.inputArr[index] = {};
@@ -943,7 +1122,7 @@ let SfIUploader = class SfIUploader extends LitElement {
                     });
                     (_j = this._SfUploadContainer.querySelector('#button-open-' + i)) === null || _j === void 0 ? void 0 : _j.addEventListener('click', (ev) => {
                         const index = ev.currentTarget.id.split("-")[2];
-                        Api.getKeyData(this.inputArr[index]['key'], this.apiId, this._SfLoader, this.renderKeyData, (errMsg) => {
+                        Api.getKeyData(this.inputArr[index]['key'], this.apiId, this.apiIdRegion, this._SfLoader, this.renderKeyData, (errMsg) => {
                             this.setError(errMsg);
                             setTimeout(() => {
                                 this.clearMessages();
@@ -968,6 +1147,7 @@ let SfIUploader = class SfIUploader extends LitElement {
         this.prepopulateInputs = () => {
             var _a;
             const arr = JSON.parse(this.prepopulatedInputArr);
+            this.jobIds = [];
             this.inputArr = [];
             for (var i = 0; i < arr.length; i++) {
                 const obj = {};
@@ -988,6 +1168,7 @@ let SfIUploader = class SfIUploader extends LitElement {
             if (arr.length === 0) {
                 this.inputArr = [];
             }
+            console.log("prepopulated input arr", this.inputArr, arr);
             for (var i = 0; i < arr.length; i++) {
                 if (arr[i]['jobId'] != null && arr[i]['arrWords'] == null) {
                     this.executeAndUpdateExtract(arr[i]['jobId'], i);
@@ -1069,6 +1250,18 @@ let SfIUploader = class SfIUploader extends LitElement {
             <div id="detail-container" class="hide d-flex flex-col" part="detail-container">
 
             </div>
+            <div id="password-container" class="${this.showPasswordModal ? "" : "hide"} d-flex flex-col align-stretch p-20" part="password-container">
+              <div id="password-content-controls" class="d-flex justify-between align-center">
+                <button class="invisible" part="button-icon"><span class="material-icons">close</span></button>
+                <h3>Password Protected</h3>
+                <button id="password-close" @click="${this.handlePasswordClose}" part="button-icon"><span class="material-icons">close</span></button>
+              </div>
+              ${this.isPasswordIncorrect ? html `<p class="m-20" style="color:red" part="password-error">Incorrect password</p>` : ''}
+              
+              <input part="input" class="m-20" type="password" id="password-input" placeholder="Enter Password" />
+              
+              <button part="button" class="m-20" @click="${this.handlePasswordSubmit}">Unlock</button>
+            </div>
           </div>
           <div class="d-flex justify-between">
               <div class="lb"></div>
@@ -1099,6 +1292,18 @@ let SfIUploader = class SfIUploader extends LitElement {
             <div id="detail-container" class="hide d-flex flex-col" part="detail-container">
 
             </div>
+            <div id="password-container" class="${this.showPasswordModal ? "" : "hide"} d-flex flex-col align-stretch p-20" part="password-container">
+              <div id="password-content-controls" class="d-flex justify-between align-center">
+                <button class="invisible" part="button-icon"><span class="material-icons">close</span></button>
+                <h3>Password Protected</h3>
+                <button id="password-close" @click="${this.handlePasswordClose}" part="button-icon"><span class="material-icons">close</span></button>
+              </div>
+              ${this.isPasswordIncorrect ? html `<p class="m-20" style="color:red" part="password-error">Incorrect password</p>` : ''}
+              
+              <input part="input" class="m-20" type="password" id="password-input" placeholder="Enter Password" />
+              
+              <button part="button" class="m-20" @click="${this.handlePasswordSubmit}">Unlock</button>
+            </div>
           </div>
         `;
             }
@@ -1116,7 +1321,18 @@ let SfIUploader = class SfIUploader extends LitElement {
           <div id="detail-container" class="hide d-flex flex-col" part="detail-container">
 
           </div>
-
+          <div id="password-container" class="${this.showPasswordModal ? "" : "hide"} d-flex flex-col align-stretch p-20" part="password-container">
+            <div id="password-content-controls" class="d-flex justify-between align-center">
+              <button class="invisible" part="button-icon"><span class="material-icons">close</span></button>
+              <h3>Password Protected</h3>
+              <button id="password-close" @click="${this.handlePasswordClose}" part="button-icon"><span class="material-icons">close</span></button>
+            </div>
+            ${this.isPasswordIncorrect ? html `<p class="m-20" style="color:red" part="password-error">Incorrect password</p>` : ''}
+            
+            <input part="input" class="m-20" type="password" id="password-input" placeholder="Enter Password" />
+            
+            <button part="button" class="m-20" @click="${this.handlePasswordSubmit}">Unlock</button>
+          </div>
         </div>
         <div class="d-flex justify-between">
             <div class="lb"></div>
@@ -1183,6 +1399,24 @@ SfIUploader.styles = css `
       overflow-y: auto;
       border-radius: 10px;
       z-index: 97;
+    }
+    #password-container {
+      width: 90%;
+      margin-left: 5%;
+      height: 90vh;
+      margin-top: 5vh;
+      position: fixed;
+      left: 0px;
+      top: 0px;
+      background-color: #efefef;
+      box-shadow: 1px 1px 10px 0 rgba(0, 0, 0, 0.25), -1px -1px 10px 0 rgba(255, 255, 255, 0.6);
+      border-top: solid 1px rgba(255, 255, 255, 0.3);
+      border-left: solid 1px rgba(255, 255, 255, 0.3);
+      border-bottom: solid 1px rgba(0, 0, 0, 0.1);
+      border-right: solid 1px rgba(0, 0, 0, 0.1);
+      overflow-y: auto;
+      border-radius: 10px;
+      z-index: 98;
     }
 
     .w-100 {
@@ -1299,6 +1533,10 @@ SfIUploader.styles = css `
     .align-center {
       align-items: center;
     }
+
+    .align-stretch {
+      align-items: stretch;
+    }
     
     .lds-dual-ring {
       display: inline-block;
@@ -1407,6 +1645,9 @@ SfIUploader.styles = css `
     .p-5 {
       padding: 5px;
     }
+    .p-20 {
+      padding: 20px;
+    }
 
     .m-5 {
       margin: 5px;
@@ -1486,6 +1727,9 @@ SfIUploader.styles = css `
     .pdf-canvas-thumbnail {
       width:200px
     }
+    .pdf-canvas-error {
+      width:200px
+    }
     .pdf-canvas {
       // width:90%;
       // margin-left: 5%;
@@ -1503,6 +1747,10 @@ __decorate([
     // prepopulatedInputArr: string = "[{\"filename\":\"logo.png\",\"key\":\"5e850fa4-19de-4ad0-bcd1-fe7e8d9335d5\",\"ext\":\"png\"}]";
     // prepopulatedInputArr: string = "[{\"key\":\"3deb2dc2-dddc-4560-a5f2-d4a137429e59\",\"file\":{\"name\":\"3deb2dc2-dddc-4560-a5f2-d4a137429e59.pdf\",\"ext\":\"pdf\"},\"ext\":\"pdf\"},{\"key\":\"2050925c-db78-4a6c-ad75-cfa898fc64b2\",\"file\":{\"name\":\"2050925c-db78-4a6c-ad75-cfa898fc64b2.pdf\",\"ext\":\"pdf\"},\"ext\":\"pdf\"}]";
     // prepopulatedInputArr: string = "[{\"arrWords\":[],\"arrWordsMeta\":{\"PAGE\":1},\"jobId\":\"1dc1f5ad1d6d9b85e4b474b15725d4e7f8ed4beeea173bdb3988b9563bee2521\",\"key\":\"6b9ec22d-20d0-4d2c-b92c-748a0f0bc8ff\",\"ext\":\"jpg\"}]";
+    // prepopulatedInputArr: string = "[{\"key\":\"9ab1ac91-60cc-4089-8c8e-64c5f5a2b8c3\",\"filename\":\"Business Continuity Policy.pdf\",\"ext\":\"pdf\"}]";
+    // prepopulatedInputArr: string = "[{\"key\":\"65aaee87-8639-498a-b521-814368229e4b\",\"filename\":\"protected.pdf\",\"ext\":\"pdf\"}]";
+    // prepopulatedInputArr: string = "[{\"key\":\"da9310df-85cc-4305-a84f-7fd2539e3445\",\"ext\":\"png\"}]";
+    // prepopulatedInputArr: string = "[{\"key\":\"a8683874-3c70-400e-8918-20b0a7cf7159\",\"filename\":\"CKPL_Paysheet_Assam Plant_Mar-2026.xlsx\",\"ext\":\"xlsx\"}]";
 ], SfIUploader.prototype, "prepopulatedInputArr", void 0);
 __decorate([
     property()
@@ -1542,6 +1790,9 @@ __decorate([
 ], SfIUploader.prototype, "apiId", void 0);
 __decorate([
     property()
+], SfIUploader.prototype, "apiIdRegion", void 0);
+__decorate([
+    property()
 ], SfIUploader.prototype, "extract", void 0);
 __decorate([
     property()
@@ -1557,6 +1808,7 @@ __decorate([
 ], SfIUploader.prototype, "extractJobId", void 0);
 __decorate([
     property()
+    // docType: string = "IN_FL_SXHTWNPRVT_DOP_IC";
 ], SfIUploader.prototype, "docType", void 0);
 __decorate([
     property({ type: Number })
@@ -1564,6 +1816,9 @@ __decorate([
 __decorate([
     property()
 ], SfIUploader.prototype, "allowDownload", void 0);
+__decorate([
+    property()
+], SfIUploader.prototype, "emailcontent", void 0);
 __decorate([
     property()
 ], SfIUploader.prototype, "flow", void 0);
@@ -1594,6 +1849,12 @@ __decorate([
 __decorate([
     query('#button-add')
 ], SfIUploader.prototype, "_SfButtonAdd", void 0);
+__decorate([
+    state()
+], SfIUploader.prototype, "showPasswordModal", void 0);
+__decorate([
+    state()
+], SfIUploader.prototype, "isPasswordIncorrect", void 0);
 SfIUploader = __decorate([
     customElement('sf-i-uploader')
 ], SfIUploader);

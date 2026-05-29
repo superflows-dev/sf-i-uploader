@@ -30,6 +30,7 @@ export declare class SfIUploader extends LitElement {
     projectId: string;
     maxSize: number;
     apiId: string;
+    apiIdRegion: string;
     extract: string;
     newButtonText: string;
     allowedExtensions: string;
@@ -38,6 +39,7 @@ export declare class SfIUploader extends LitElement {
     docType: string;
     chunkSize: number;
     allowDownload: string;
+    emailcontent: string;
     getAllowedExtensions: () => any;
     getExtractableExtensions: () => any;
     selectedValues: () => ({
@@ -96,6 +98,7 @@ export declare class SfIUploader extends LitElement {
     possibleMatches: Array<Array<string>>;
     matchArr: Array<Array<string>>;
     uploadValid: boolean;
+    jobIds: Array<string>;
     flow: string;
     static styles: import("lit").CSSResult;
     _SfRowError: any;
@@ -120,11 +123,18 @@ export declare class SfIUploader extends LitElement {
     queueRenderPage: (num: number, canvas: any, scale: any, ctx: any) => void;
     onPrevPage: (canvas: any, scale: any, ctx: any) => void;
     onNextPage: (canvas: any, scale: any, ctx: any) => void;
+    private showPasswordModal;
+    private isPasswordIncorrect;
+    private passwordCallback;
     expandPdfDetail: (ext: string, data: string, fromMaximize?: boolean) => Promise<void>;
-    loadWorkerURL: (url: string) => Promise<any>;
+    handlePasswordSubmit(): void;
+    handlePasswordClose(): void;
+    loadWorkerURL: (url: string) => Promise<string>;
     renderMaximize: (ext: string, data: string) => Promise<void>;
     renderDownload: (ext: string, data: string) => Promise<void>;
     renderKeyData: (ext: string, data: string, hidePreview?: boolean) => Promise<void>;
+    mimeToExtMap: Record<string, string>;
+    downloadBase64: (base64Input: string, fallbackExt?: string, fallbackMime?: string) => void;
     chunkify: (base64String: string) => RegExpMatchArray | null;
     executeExtract: (jobId: string) => Promise<void>;
     processExtract: (key: string, fileIndex: any) => Promise<any>;

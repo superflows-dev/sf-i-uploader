@@ -32,9 +32,9 @@ const prepareXhrPresignedDelete = async (url: string, loaderElement: any, loader
 }
 
 
-const uploadBlock = async (key: string, block: string, data: string, apiId: string, _SfLoader: any, callbackError: any, projectId: string) => {
+const uploadBlock = async (key: string, block: string, data: string, apiId: string, apiIdRegion: string, _SfLoader: any, callbackError: any, projectId: string) => {
 
-  let url = "https://" + apiId + ".execute-api.us-east-1.amazonaws.com/test/upload";
+  let url = "https://" + apiId + ".execute-api." + apiIdRegion + ".amazonaws.com/test/upload";
 
   const body: any = { "type": "data", "key": key, "data": data, "block": block }
   const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
@@ -57,9 +57,9 @@ const uploadBlock = async (key: string, block: string, data: string, apiId: stri
 }
 
 
-const uploadMeta = async (key: string, filename: string, ext: string, numblocks: string, apiId: string, _SfLoader: any, callbackError: any, projectId: string) => {
+const uploadMeta = async (key: string, filename: string, ext: string, numblocks: string, apiId: string, apiIdRegion: string, _SfLoader: any, callbackError: any, projectId: string) => {
 
-  let url = "https://" + apiId + ".execute-api.us-east-1.amazonaws.com/test/upload";
+  let url = "https://" + apiId + ".execute-api." + apiIdRegion + ".amazonaws.com/test/upload";
 
   const body: any = { "type": "meta", "key": key, "ext": ext, "numblocks": numblocks, "filename": filename }
   const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
@@ -80,9 +80,10 @@ const uploadMeta = async (key: string, filename: string, ext: string, numblocks:
 
 }
 
-const getMessageByDocType = async (docType: string, apiId: string, _SfLoader: any, callbackSuccess: any, callbackError: any) => {
 
-  let url = "https://" + apiId + ".execute-api.us-east-1.amazonaws.com/test/getmessage";
+const getMessageByDocType = async (docType: string, apiId: string, apiIdRegion: string, _SfLoader: any, callbackSuccess: any, callbackError: any) => {
+
+  let url = "https://" + apiId + ".execute-api." + apiIdRegion + ".amazonaws.com/test/getmessage";
 
   const body: any = { "docType": docType }
   const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
@@ -106,9 +107,9 @@ const getMessageByDocType = async (docType: string, apiId: string, _SfLoader: an
 
 }
 
-const getExtractStatus = async (jobid: string, apiId: string, _SfLoader: any, callbackError: any, projectId: string) => {
+const getExtractStatus = async (jobid: string, apiId: string, apiIdRegion: string, _SfLoader: any, callbackError: any, projectId: string) => {
 
-  let url = "https://" + apiId + ".execute-api.us-east-1.amazonaws.com/test/getextractstatus";
+  let url = "https://" + apiId + ".execute-api." + apiIdRegion + ".amazonaws.com/test/getextractstatus";
 
   const body: any = { "jobid": jobid }
   const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
@@ -132,9 +133,9 @@ const getExtractStatus = async (jobid: string, apiId: string, _SfLoader: any, ca
 
 }
 
-const getExtract = async (key: string, fileIndex: string, dataPassthrough: any, apiId: string, _SfLoader: any, callbackError: any, callbackUrlHost: string, callbackUrlPath: string, docType: string, projectId: string, filename: string, emailcontent: string) => {
+const getExtract = async (key: string, fileIndex: string, dataPassthrough: any, apiId: string, apiIdRegion: string, _SfLoader: any, callbackError: any, callbackUrlHost: string, callbackUrlPath: string, docType: string, projectId: string, filename: string, emailcontent: string) => {
 
-  let url = "https://" + apiId + ".execute-api.us-east-1.amazonaws.com/test/getextract";
+  let url = "https://" + apiId + ".execute-api." + apiIdRegion + ".amazonaws.com/test/getextract";
 
   var data: any = {};
 
@@ -165,9 +166,9 @@ const getExtract = async (key: string, fileIndex: string, dataPassthrough: any, 
 }
 
 
-const getKeyData = async (key: string, apiId: string, _SfLoader: any, callbackSuccess: any, callbackError: any, projectId: string) => {
+const getKeyData = async (key: string, apiId: string, apiIdRegion: string, _SfLoader: any, callbackSuccess: any, callbackError: any, projectId: string) => {
 
-  let url = "https://" + apiId + ".execute-api.us-east-1.amazonaws.com/test/get1";
+  let url = "https://" + apiId + ".execute-api." + apiIdRegion + ".amazonaws.com/test/get1";
 
   const body: any = { "key": key }
   const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
@@ -196,9 +197,9 @@ const getKeyData = async (key: string, apiId: string, _SfLoader: any, callbackSu
 
 }
 
-const largeFileWarning = async (fileSize: string, apiId: string, _SfLoader: any, callbackError: any, projectId: string) => {
+const largeFileWarning = async (fileSize: string, apiId: string, apiIdRegion: string, _SfLoader: any, callbackError: any, projectId: string) => {
 
-  let url = "https://" + apiId + ".execute-api.us-east-1.amazonaws.com/test/largefilewarning";
+  let url = "https://" + apiId + ".execute-api." + apiIdRegion + ".amazonaws.com/test/largefilewarning";
 
   const body: any = { "filesize": fileSize }
   const authorization = btoa(Util.readCookie('email') + ":" + Util.readCookie('accessToken'));
